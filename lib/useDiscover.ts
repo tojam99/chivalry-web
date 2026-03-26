@@ -34,48 +34,56 @@ export function useDiscover(myProfile: Profile | null) {
     if (!myProfile?.id) return;
     setLoading(true);
 
-    // Get exclusion lists in parallel
-    const [swipedResult, blockedResult, matchesResult] = await Promise.all([
-      supabase.from('swipes').select('swiped_id').eq('swiper_id', myProfile.id),
-      supabase.from('reports').select('reported_id').eq('reporter_id', myProfile.id).eq('reason', 'blocked'),
-      supabase.from('matches').select('user1_id, user2_id').or(`user1_id.eq.${myProfile.id},user2_id.eq.${myProfile.id}`),
-    ]);
+    try {
+      // Get exclusion lists in parallel
+      const [swipedResult, blockedResult, matchesResult] = await Promise.all([
+        supabase.from('swipes').select('swiped_id').eq('swiper_id', myProfile.id),
+        supabase.from('reports').select('reported_id').eq('reporter_id', myProfile.id).eq('reason', 'blocked'),
+        supabase.from('matches').select('user1_id, user2_id').or(`user1_id.eq.${myProfile.id},user2_id.eq.${myProfile.id}`),
+      ]);
 
-    const swipedIds = swipedResult.data?.map((s) => s.swiped_id) || [];
-    const blockedIds = blockedResult.data?.map((b) => b.reported_id) || [];
-    const matchedIds = (matchesResult.data || []).map((m) =>
-      m.user1_id === myProfile.id ? m.user2_id : m.user1_id
-    );
-    const excludeIds = [myProfile.id, ...swipedIds, ...blockedIds, ...matchedIds];
+      const swipedIds = swipedResult.data?.map((s) => s.swiped_id) || [];
+      const blockedIds = blockedResult.data?.map((b) => b.reported_id) || [];
+      const matchedIds = (matchesResult.data || []).map((m) =>
+        m.user1_id === myProfile.id ? m.user2_id : m.user1_id
+      );
+      const excludeIds = [myProfile.id, ...swipedIds, ...blockedIds, ...matchedIds];
 
-    // Fetch eligible profiles
-    let query = supabase
-      .from('profiles')
-      .select('*')
-      .eq('onboarded', true)
-      .eq('is_active', true);
+      console.log('[Discover] My ID:', myProfile.id);
+      console.log('[Discover] Swiped:', swipedIds.length, 'Blocked:', blockedIds.length, 'Matched:', matchedIds.length);
+      console.log('[Discover] Total excluded:', excludeIds.length);
 
-    if (excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-    }
+      // Fetch eligible profiles
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .eq('onboarded', true)
+        .eq('is_active', true);
 
-    // Gender filter
-    if (myProfile.show_me && myProfile.show_me !== 'everyone') {
-      query = query.eq('identification', myProfile.show_me);
-    }
+      if (excludeIds.length > 0) {
+        query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
 
-    // Age filter
-    if (myProfile.age_min) query = query.gte('age', myProfile.age_min);
-    if (myProfile.age_max) query = query.lte('age', myProfile.age_max);
+      // Gender filter
+      const showMe = (myProfile.show_me || '').toLowerCase();
+      if (showMe && showMe !== 'everyone') {
+        query = query.eq('identification', myProfile.show_me);
+      }
 
-    query = query.limit(50);
+      // Age filter
+      if (myProfile.age_min && myProfile.age_min > 18) query = query.gte('age', myProfile.age_min);
+      if (myProfile.age_max && myProfile.age_max < 99) query = query.lte('age', myProfile.age_max);
 
-    const { data: profilesData } = await query;
-    if (!profilesData || profilesData.length === 0) {
-      setProfiles([]);
-      setLoading(false);
-      return;
-    }
+      query = query.limit(50);
+
+      const { data: profilesData, error: profilesError } = await query;
+      console.log('[Discover] Profiles returned:', profilesData?.length, 'Error:', profilesError);
+
+      if (!profilesData || profilesData.length === 0) {
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
 
     // Fetch photos, date ideas, and interests for all profiles
     const profileIds = profilesData.map((p) => p.id);
@@ -128,6 +136,11 @@ export function useDiscover(myProfile: Profile | null) {
     setProfiles(enriched);
     setCurrentIndex(0);
     setLoading(false);
+    } catch (err) {
+      console.error('[Discover] Error:', err);
+      setProfiles([]);
+      setLoading(false);
+    }
   }, [myProfile?.id]);
 
   useEffect(() => {
