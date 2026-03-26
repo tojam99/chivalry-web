@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { Mail, Phone, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-12 text-cream-600">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/discover';
