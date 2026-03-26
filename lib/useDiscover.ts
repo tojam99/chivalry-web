@@ -89,14 +89,16 @@ export function useDiscover(myProfile: Profile | null) {
     const profileIds = profilesData.map((p) => p.id);
 
     const [photosResult, ideasResult, interestsResult] = await Promise.all([
-      supabase.from('profile_photos').select('*').in('profile_id', profileIds).order('position'),
+      supabase.from('profile_photos').select('*').in('profile_id', profileIds).order('position', { ascending: true }),
       supabase.from('date_ideas').select('*').in('profile_id', profileIds),
-      supabase
-        .from('profile_interests')
-        .select('profile_id, interest_id, interests(name)')
-        .in('profile_id', profileIds),
+      supabase.from('profile_interests').select('profile_id, interest_id').in('profile_id', profileIds),
     ]);
 
+    console.log('[Discover] Photos:', photosResult.data?.length, 'Error:', photosResult.error?.message);
+    console.log('[Discover] Ideas:', ideasResult.data?.length, 'Error:', ideasResult.error?.message);
+    console.log('[Discover] Interests:', interestsResult.data?.length, 'Error:', interestsResult.error?.message);
+
+    // If photos query failed, still show profiles without filtering by photos
     const photosByProfile: Record<string, any[]> = {};
     (photosResult.data || []).forEach((p) => {
       if (!photosByProfile[p.profile_id]) photosByProfile[p.profile_id] = [];
@@ -109,10 +111,18 @@ export function useDiscover(myProfile: Profile | null) {
       ideasByProfile[d.profile_id].push(d);
     });
 
+    // Fetch interest names separately to avoid join issues
+    const interestIds = (interestsResult.data || []).map((i: any) => i.interest_id).filter(Boolean);
+    let interestNames: Record<string, string> = {};
+    if (interestIds.length > 0) {
+      const { data: interestsData } = await supabase.from('interests').select('id, name').in('id', interestIds);
+      (interestsData || []).forEach((i) => { interestNames[i.id] = i.name; });
+    }
+
     const interestsByProfile: Record<string, string[]> = {};
     (interestsResult.data || []).forEach((i: any) => {
       if (!interestsByProfile[i.profile_id]) interestsByProfile[i.profile_id] = [];
-      if (i.interests?.name) interestsByProfile[i.profile_id].push(i.interests.name);
+      if (interestNames[i.interest_id]) interestsByProfile[i.profile_id].push(interestNames[i.interest_id]);
     });
 
     // Build final profiles with distance
