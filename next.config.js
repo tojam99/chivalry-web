@@ -14,7 +14,9 @@ const nextConfig = {
       { source: '/privacy.html', destination: '/privacy', permanent: true },
       { source: '/terms.html', destination: '/terms', permanent: true },
       { source: '/support.html', destination: '/support', permanent: true },
-      { source: '/safety.html', destination: '/support', permanent: true },
+      { source: '/safety.html', destination: '/safety', permanent: true },
+      { source: '/cookies.html', destination: '/cookies', permanent: true },
+      { source: '/delete.html', destination: '/delete', permanent: true },
       { source: '/email-verified.html', destination: '/email-verified', permanent: true },
     ];
   },
