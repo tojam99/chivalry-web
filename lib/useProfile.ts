@@ -24,7 +24,7 @@ export interface Profile {
   verified: boolean;
   onboarded: boolean;
   available_now: boolean;
-  photos?: { id: string; url: string; position: number }[];
+  photos?: { id: string; photo_url: string; sort_order: number }[];
   date_ideas?: { id: string; title: string; location_name: string }[];
 }
 

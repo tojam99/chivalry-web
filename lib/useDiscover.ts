@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import type { Profile } from './useProfile';
 
 export interface DiscoverProfile extends Profile {
-  photos: { id: string; url: string; position: number }[];
+  photos: { id: string; photo_url: string; sort_order: number }[];
   date_ideas: { id: string; title: string; location_name: string; latitude: number; longitude: number }[];
   interests: string[];
   distance?: number;
@@ -89,7 +89,7 @@ export function useDiscover(myProfile: Profile | null) {
     const profileIds = profilesData.map((p) => p.id);
 
     const [photosResult, ideasResult, interestsResult] = await Promise.all([
-      supabase.from('profile_photos').select('*').in('profile_id', profileIds),
+      supabase.from('profile_photos').select('*').in('profile_id', profileIds).order('sort_order', { ascending: true }),
       supabase.from('date_ideas').select('*').in('profile_id', profileIds),
       supabase.from('profile_interests').select('profile_id, interest_id').in('profile_id', profileIds),
     ]);

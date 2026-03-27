@@ -118,9 +118,9 @@ export default function DiscoverPage() {
 
   const photos = currentProfile.photos;
   const currentPhoto = photos[photoIndex];
-  const photoUrl = currentPhoto?.url?.startsWith('http')
-    ? currentPhoto.url
-    : `${SUPABASE_STORAGE}${currentPhoto?.url}`;
+  const photoUrl = currentPhoto?.photo_url?.startsWith('http')
+    ? currentPhoto?.photo_url
+    : `${SUPABASE_STORAGE}${currentPhoto?.photo_url}`;
 
   return (
     <>
@@ -325,9 +325,9 @@ export default function DiscoverPage() {
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
                 <Image
                   src={
-                    matchModal.photos[0].url.startsWith('http')
-                      ? matchModal.photos[0].url
-                      : `${SUPABASE_STORAGE}${matchModal.photos[0].url}`
+                    matchModal.photos[0].photo_url.startsWith('http')
+                      ? matchModal.photos[0].photo_url
+                      : `${SUPABASE_STORAGE}${matchModal.photos[0].photo_url}`
                   }
                   alt={matchModal.name}
                   width={96}
