@@ -89,7 +89,7 @@ export function useDiscover(myProfile: Profile | null) {
     const profileIds = profilesData.map((p) => p.id);
 
     const [photosResult, ideasResult, interestsResult] = await Promise.all([
-      supabase.from('profile_photos').select('*').in('profile_id', profileIds).order('position', { ascending: true }),
+      supabase.from('profile_photos').select('*').in('profile_id', profileIds),
       supabase.from('date_ideas').select('*').in('profile_id', profileIds),
       supabase.from('profile_interests').select('profile_id, interest_id').in('profile_id', profileIds),
     ]);
