@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from './supabase-browser';
+import { createClient } from './supabase-browser';
+const supabase = createClient();
 
 export interface DiscoverProfile {
   id: string;

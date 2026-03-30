@@ -109,7 +109,7 @@ export default function DatesPage() {
       }
 
       // Get other user profiles
-      const otherUserIds = [...new Set(Object.values(matchMap))];
+      const otherUserIds = Array.from(new Set(Object.values(matchMap)));
       const [profilesResult, photosResult] = await Promise.all([
         supabase.from('profiles').select('id, name, age').in('id', otherUserIds),
         supabase.from('profile_photos').select('profile_id, photo_url, sort_order').in('profile_id', otherUserIds).order('sort_order', { ascending: true }),
