@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=date.chivalry.app&hl=en_US';
 
 export default function EmailVerifiedPage() {
   return (
@@ -15,16 +17,6 @@ export default function EmailVerifiedPage() {
 function EmailVerifiedContent() {
   const searchParams = useSearchParams();
   const hasError = searchParams.get('error') || searchParams.get('error_description');
-  const [redirecting, setRedirecting] = useState(false);
-
-  useEffect(() => {
-    if (!hasError) {
-      setRedirecting(true);
-      setTimeout(() => {
-        window.location.href = 'chivalry://auth/callback' + window.location.hash;
-      }, 2000);
-    }
-  }, [hasError]);
 
   return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center px-6">
@@ -47,13 +39,13 @@ function EmailVerifiedContent() {
             </div>
             <h1 className="font-display text-3xl text-sage-800 mb-3">Verification failed</h1>
             <p className="text-cream-700 mb-8">
-              This link may have expired or already been used. Please try signing up again in the Chivalry app.
+              This link may have expired or already been used. Please try again from the Chivalry app.
             </p>
             <a
-              href="chivalry://"
+              href={PLAY_STORE_URL}
               className="inline-block bg-sage-400 text-white font-medium px-8 py-3.5 rounded-2xl hover:bg-sage-500 transition-colors"
             >
-              Open Chivalry App
+              Get Chivalry on Google Play
             </a>
           </>
         ) : (
@@ -65,20 +57,14 @@ function EmailVerifiedContent() {
             </div>
             <h1 className="font-display text-3xl text-sage-800 mb-3">Email verified!</h1>
             <p className="text-cream-700 mb-8">
-              Your email has been confirmed. Go back to the Chivalry app to continue.
+              Your email has been confirmed. You can close this page and go back to the Chivalry app.
             </p>
             <a
-              href="chivalry://"
+              href={PLAY_STORE_URL}
               className="inline-block bg-sage-400 text-white font-medium px-8 py-3.5 rounded-2xl hover:bg-sage-500 transition-colors"
             >
-              Open Chivalry App
+              Open Chivalry on Google Play
             </a>
-            {redirecting && (
-              <p className="text-cream-600 text-sm mt-4">Redirecting to app automatically...</p>
-            )}
-            <p className="text-cream-600 text-xs mt-4">
-              If the button doesn&apos;t work, open the Chivalry app on your phone.
-            </p>
           </>
         )}
       </div>
