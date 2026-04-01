@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support — Chivalry</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, sans-serif; background: #1E2420; color: #ccc; line-height: 1.8; }
+    .header {
+      padding: 20px 32px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo { font-size: 24px; font-weight: 900; color: #7A9A6D; text-decoration: none; }
+    .back-link { color: #7A9A6D; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .content { max-width: 600px; margin: 0 auto; padding: 60px 32px 100px; text-align: center; }
+    h1 { font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 12px; letter-spacing: -1px; }
+    .subtitle { color: #888; font-size: 16px; margin-bottom: 48px; }
+
+    .form-card {
+      background: #283028; border-radius: 16px; padding: 32px;
+      border: 1px solid rgba(255,255,255,0.05); text-align: left;
+    }
+    .form-card h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 600; color: #aaa; margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px; background: #1E2420; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #fff; font-size: 15px; font-family: 'DM Sans', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: #7A9A6D;
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    .form-group select { appearance: none; cursor: pointer; }
+
+    .submit-btn {
+      width: 100%; padding: 14px; background: #7A9A6D; border: none; border-radius: 12px;
+      color: #1E2420; font-size: 16px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; margin-top: 8px;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .success-msg {
+      display: none; text-align: center; padding: 40px 20px;
+      background: #283028; border-radius: 16px;
+      border: 1px solid rgba(122,154,109,0.2);
+    }
+    .success-msg h2 { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .success-msg p { font-size: 15px; color: #888; }
+
+    .error-msg {
+      display: none; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.2);
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+      font-size: 14px; color: #FF6B6B; text-align: center;
+    }
+
+    .links { margin-top: 32px; display: flex; justify-content: center; gap: 24px; }
+    .links a { color: #7A9A6D; font-size: 14px; font-weight: 600; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) { .content { padding: 40px 20px 80px; } h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="logo">Chivalry</a>
+    <a href="/" class="back-link">← Back to Home</a>
+  </div>
+  <div class="content">
+    <h1>Help & Support</h1>
+    <p class="subtitle">We're here to help. Send us a message and we'll get back to you within 24 hours.</p>
+
+    <div id="formSection" class="form-card">
+      <h3>Contact Us</h3>
+      <div id="errorMsg" class="error-msg"></div>
+      <form id="contactForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label>Your name *</label>
+          <input type="text" id="name" required placeholder="Jane Doe" />
+        </div>
+
+        <div class="form-group">
+          <label>Email address *</label>
+          <input type="email" id="email" required placeholder="you@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label>What can we help with? *</label>
+          <select id="type" required>
+            <option value="">Select a topic</option>
+            <option value="General Support">General question</option>
+            <option value="Bug Report">Report a bug</option>
+            <option value="Report User">Report a user</option>
+            <option value="Account Recovery">Account recovery</option>
+            <option value="Change Email">Change my email</option>
+            <option value="Change Phone">Change my phone number</option>
+            <option value="Account Deletion">Delete my account</option>
+            <option value="Safety Concern">Safety concern</option>
+            <option value="Feedback">Feedback or suggestion</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea id="message" required placeholder="Tell us what's going on..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+      </form>
+    </div>
+
+    <div id="successMsg" class="success-msg">
+      <h2>Message Sent ✓</h2>
+      <p>Thanks for reaching out! We'll get back to you at the email you provided within 24 hours.</p>
+    </div>
+
+    <div class="links">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/safety.html">Safety Standards</a>
+    </div>
+  </div>
+
+  <script>
+    // UPDATE THIS to your Supabase project URL
+    const SUPABASE_URL = 'https://pkekuxksofbzjrieesqm.supabase.co';
+    const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/contact-form`;
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        type: document.getElementById('type').value,
+        message: document.getElementById('message').value,
+      };
+
+      try {
+        const res = await fetch(FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (!res.ok) throw new Error('Failed to send');
+
+        document.getElementById('formSection').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+      } catch (err) {
+        errorMsg.textContent = 'Something went wrong. Please try again or email us directly at support@chivalry.date.';
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+      }
+    }
+
+    // Auto-fill form from URL params (used when linking from the app)
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const topic = params.get('topic');
+      const msg = params.get('message');
+      if (topic) {
+        const select = document.getElementById('type');
+        for (let i = 0; i < select.options.length; i++) {
+          if (select.options[i].value === topic) {
+            select.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      if (msg) {
+        document.getElementById('message').value = decodeURIComponent(msg);
+      }
+    })();
+  </script>
+</body>
+</html>
