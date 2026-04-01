@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import AuthRedirect from '@/components/AuthRedirect';
 
 export const metadata: Metadata = {
   title: 'Chivalry — Putting dates back into dating',
@@ -21,7 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuthRedirect />
+        {children}
+      </body>
     </html>
   );
 }
