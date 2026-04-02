@@ -25,36 +25,31 @@ const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/ob
 
 export default function DiscoverPage() {
   const { profile: myProfile, loading: profileLoading } = useProfile();
-  const { profiles, loading, myProfileId, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
+  const { currentProfile, remaining, loading, swipe, refetch } = useDiscover(myProfile);
   const router = useRouter();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [matchModal, setMatchModal] = useState<DiscoverProfile | null>(null);
+  const [lastProfileId, setLastProfileId] = useState<string | null>(null);
 
-  const currentProfile = profiles[currentIndex] || null;
-  const remaining = profiles.length - currentIndex;
-
-  // Reset photo index when profile changes
   useEffect(() => {
-    setPhotoIndex(0);
-  }, [currentIndex]);
-
-  // Reset index when profiles list changes
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [profiles]);
+    if (currentProfile && currentProfile.id !== lastProfileId) {
+      setLastProfileId(currentProfile.id);
+      setPhotoIndex(0);
+    }
+  }, [currentProfile, lastProfileId]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (matchAlert) return;
+      if (matchModal) return;
       if (e.key === 'ArrowLeft') handleSwipe('left');
       if (e.key === 'ArrowRight') handleSwipe('right');
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [matchAlert, swiping, currentProfile]);
+  }, [matchModal, swiping, currentProfile]);
 
   const handleSwipe = useCallback(
     async (direction: 'left' | 'right') => {
@@ -62,12 +57,12 @@ export default function DiscoverPage() {
       setSwiping(true);
       setSwipeDirection(direction);
       await new Promise((r) => setTimeout(r, 300));
-      await recordSwipe(currentProfile.id, direction);
+      const result = await swipe(direction);
       setSwipeDirection(null);
       setSwiping(false);
-      setCurrentIndex((prev) => prev + 1);
+      if (result?.matched) setMatchModal(result.profile);
     },
-    [swiping, currentProfile, recordSwipe]
+    [swiping, currentProfile, swipe]
   );
 
   if (profileLoading || loading) {
@@ -103,7 +98,7 @@ export default function DiscoverPage() {
         <p className="text-cream-700 max-w-sm mb-6">
           You&apos;ve seen everyone nearby. Check back later for new people!
         </p>
-        <button onClick={refresh} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">
+        <button onClick={refetch} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">
           Refresh
         </button>
       </div>
@@ -157,6 +152,7 @@ export default function DiscoverPage() {
                 <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
                 <div className="flex items-center gap-1.5 text-white/80 text-sm mt-1">
                   {currentProfile.city && (<><MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span></>)}
+                  {currentProfile.distance !== undefined && <span className="text-white/60 ml-1">{currentProfile.distance} mi away</span>}
                 </div>
               </div>
               {currentProfile.verified && <div className="bg-sage-400 text-white text-xs font-medium px-2.5 py-1 rounded-lg">Verified</div>}
@@ -164,7 +160,7 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons — directly after the photo card */}
         <div className="flex items-center justify-center gap-6 py-5">
           <button
             onClick={() => handleSwipe('left')}
@@ -185,7 +181,7 @@ export default function DiscoverPage() {
           {remaining} {remaining === 1 ? 'person' : 'people'} left
         </p>
 
-        {/* Profile details */}
+        {/* Profile details below buttons */}
         <div className="space-y-4">
           {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
           <div className="flex flex-wrap gap-2">
@@ -237,25 +233,25 @@ export default function DiscoverPage() {
       </div>
 
       {/* Match modal */}
-      {matchAlert && (
+      {matchModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <Sparkles className="w-10 h-10 text-gold-400 mx-auto mb-4" />
             <h2 className="font-display text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
-            <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
-            {matchAlert.photo && (
+            <p className="text-cream-700 mb-6">You and {matchModal.name} liked each other</p>
+            {matchModal.photos[0] && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
                 <Image
-                  src={matchAlert.photo.startsWith('http') ? matchAlert.photo : `${SUPABASE_STORAGE}${matchAlert.photo}`}
-                  alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
+                  src={matchModal.photos[0].photo_url.startsWith('http') ? matchModal.photos[0].photo_url : `${SUPABASE_STORAGE}${matchModal.photos[0].photo_url}`}
+                  alt={matchModal.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
                 />
               </div>
             )}
             <div className="flex flex-col gap-3">
-              <button onClick={() => { dismissMatchAlert(); router.push('/matches'); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => { setMatchModal(null); router.push('/matches'); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors flex items-center justify-center gap-2">
                 <MessageCircle className="w-4 h-4" />Send a message
               </button>
-              <button onClick={dismissMatchAlert} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
+              <button onClick={() => setMatchModal(null)} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
                 Keep swiping
               </button>
             </div>
