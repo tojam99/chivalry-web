@@ -111,29 +111,6 @@ export default function DiscoverPage() {
   const currentPhoto = photos[photoIndex];
   const photoUrl = resolvePhoto(currentPhoto?.photo_url || '');
 
-  // Preload next profile's first photo + all photos in current profile
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Preload next 2 profiles' first photos
-    visibleProfiles.slice(1, 3).forEach((p) => {
-      if (p.photos[0]?.photo_url) {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'image';
-        link.href = resolvePhoto(p.photos[0].photo_url);
-        document.head.appendChild(link);
-      }
-    });
-    // Preload all photos in current profile
-    currentProfile.photos.forEach((p) => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = resolvePhoto(p.photo_url);
-      document.head.appendChild(link);
-    });
-  }, [currentProfile.id]);
-
   return (
     <>
       {/* Card — keyed by profile ID so React completely swaps the DOM element */}
