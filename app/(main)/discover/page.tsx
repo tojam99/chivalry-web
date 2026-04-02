@@ -60,11 +60,18 @@ export default function DiscoverPage() {
       if (swiping || !currentProfile) return;
       setSwiping(true);
       setSwipeDirection(direction);
-      await new Promise((r) => setTimeout(r, 300));
-      await recordSwipe(currentProfile.id, direction);
-      setSwipeDirection(null);
-      setSwiping(false);
+
+      // Start the swipe animation
+      await new Promise((r) => setTimeout(r, 250));
+
+      // Advance to next card immediately
       setCurrentIndex((prev) => prev + 1);
+      setSwipeDirection(null);
+
+      // Record swipe in background (don't block UI)
+      recordSwipe(currentProfile.id, direction);
+
+      setSwiping(false);
     },
     [swiping, currentProfile, recordSwipe]
   );

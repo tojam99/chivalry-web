@@ -84,6 +84,7 @@ export default function LikesPage() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [actioning, setActioning] = useState(false);
   const [matchModal, setMatchModal] = useState<LikeProfile | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const router = useRouter();
 
   const isPremium = myProfile ? isPremiumActive(myProfile) : false;
@@ -251,6 +252,8 @@ export default function LikesPage() {
               if (isPremium) {
                 setSelectedProfile(like);
                 setPhotoIndex(0);
+              } else {
+                setShowUpgradeModal(true);
               }
             }}
           >
@@ -420,6 +423,25 @@ export default function LikesPage() {
               </button>
               <button onClick={() => setMatchModal(null)} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
                 Keep browsing likes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade modal for non-premium */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <Crown className="w-10 h-10 text-gold-600 mx-auto mb-4" />
+            <h2 className="font-display text-2xl text-sage-800 mb-2">Upgrade to Premium</h2>
+            <p className="text-cream-700 mb-6">See who likes you, match instantly, and never miss a connection.</p>
+            <div className="flex flex-col gap-3">
+              <button className="w-full bg-gold-400 text-white font-medium py-3 rounded-2xl hover:bg-gold-600 transition-colors">
+                Upgrade now
+              </button>
+              <button onClick={() => setShowUpgradeModal(false)} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
+                Maybe later
               </button>
             </div>
           </div>
