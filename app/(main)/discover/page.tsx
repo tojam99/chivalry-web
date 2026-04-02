@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDiscover } from '@/lib/useDiscover';
 import {
@@ -30,17 +30,25 @@ export default function DiscoverPage() {
   const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
   const router = useRouter();
 
-  // Track which profiles have been swiped — we remove them from the visible list
   const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
   const [photoIndex, setPhotoIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-  // Filter out swiped profiles
   const visibleProfiles = profiles.filter((p) => !swipedIds.has(p.id));
   const currentProfile = visibleProfiles[0] || null;
   const remaining = visibleProfiles.length;
 
-  // Reset photo index when current profile changes
+  // Collect ALL photo URLs from the next 5 visible profiles for preloading
+  const preloadUrls = useMemo(() => {
+    const urls: string[] = [];
+    visibleProfiles.slice(0, 5).forEach((p) => {
+      p.photos.forEach((photo) => {
+        urls.push(resolvePhoto(photo.photo_url));
+      });
+    });
+    return urls;
+  }, [visibleProfiles.map((p) => p.id).slice(0, 5).join(',')]);
+
   const prevId = useRef<string | null>(null);
   useEffect(() => {
     if (currentProfile && currentProfile.id !== prevId.current) {
@@ -49,7 +57,6 @@ export default function DiscoverPage() {
     }
   }, [currentProfile]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (matchAlert || animating) return;
@@ -64,15 +71,9 @@ export default function DiscoverPage() {
     (direction: 'left' | 'right') => {
       if (animating || !currentProfile) return;
       setAnimating(true);
-
-      // Remove from visible list IMMEDIATELY — React will unmount old card and mount new one
       const profileId = currentProfile.id;
       setSwipedIds((prev) => new Set(prev).add(profileId));
-
-      // Record swipe in background
       recordSwipe(profileId, direction);
-
-      // Brief cooldown to prevent double-tap
       setTimeout(() => setAnimating(false), 200);
     },
     [animating, currentProfile, recordSwipe]
@@ -113,7 +114,14 @@ export default function DiscoverPage() {
 
   return (
     <>
-      {/* Card — keyed by profile ID so React completely swaps the DOM element */}
+      {/* Hidden preloader — browser downloads and caches all these images */}
+      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }} aria-hidden="true">
+        {preloadUrls.map((url) => (
+          <img key={url} src={url} alt="" />
+        ))}
+      </div>
+
+      {/* Card */}
       <div key={currentProfile.id}>
         {/* Photo */}
         <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px]">
@@ -122,15 +130,12 @@ export default function DiscoverPage() {
               src={photoUrl}
               alt={currentProfile.name}
               className="absolute inset-0 w-full h-full object-cover"
-              loading="eager"
             />
           )}
-          {/* Tap left/right halves to navigate photos */}
           <div className="absolute inset-0 flex">
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.max(0, photoIndex - 1))} />
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.min(photos.length - 1, photoIndex + 1))} />
           </div>
-          {/* Photo dots */}
           {photos.length > 1 && (
             <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
               {photos.map((_, i) => (
@@ -138,7 +143,6 @@ export default function DiscoverPage() {
               ))}
             </div>
           )}
-          {/* Arrow buttons */}
           {photoIndex > 0 && (
             <button onClick={() => setPhotoIndex(photoIndex - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
               <ChevronLeft className="w-4 h-4" />
@@ -149,9 +153,7 @@ export default function DiscoverPage() {
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
-          {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-          {/* Name overlay */}
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
