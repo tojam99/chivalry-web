@@ -3,8 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useProfile } from '@/lib/useProfile';
-import { useDiscover, type DiscoverProfile } from '@/lib/useDiscover';
+import { useDiscover } from '@/lib/useDiscover';
 import {
   Heart,
   X,
@@ -23,33 +22,38 @@ import {
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
 
+function resolvePhoto(url: string): string {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`;
+}
+
 export default function DiscoverPage() {
-  const { profile: myProfile, loading: profileLoading } = useProfile();
-  const { currentProfile, remaining, loading, swipe, refetch } = useDiscover(myProfile);
+  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
   const router = useRouter();
 
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [matchModal, setMatchModal] = useState<DiscoverProfile | null>(null);
-  const [lastProfileId, setLastProfileId] = useState<string | null>(null);
 
+  const currentProfile = currentIndex < profiles.length ? profiles[currentIndex] : null;
+  const remaining = profiles.length - currentIndex;
+
+  // Reset photo index when profile changes
   useEffect(() => {
-    if (currentProfile && currentProfile.id !== lastProfileId) {
-      setLastProfileId(currentProfile.id);
-      setPhotoIndex(0);
-    }
-  }, [currentProfile, lastProfileId]);
+    setPhotoIndex(0);
+  }, [currentIndex]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (matchModal) return;
+      if (matchAlert) return;
       if (e.key === 'ArrowLeft') handleSwipe('left');
       if (e.key === 'ArrowRight') handleSwipe('right');
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [matchModal, swiping, currentProfile]);
+  }, [matchAlert, swiping, currentProfile]);
 
   const handleSwipe = useCallback(
     async (direction: 'left' | 'right') => {
@@ -57,33 +61,19 @@ export default function DiscoverPage() {
       setSwiping(true);
       setSwipeDirection(direction);
       await new Promise((r) => setTimeout(r, 300));
-      const result = await swipe(direction);
+      await recordSwipe(currentProfile.id, direction);
       setSwipeDirection(null);
       setSwiping(false);
-      if (result?.matched) setMatchModal(result.profile);
+      setCurrentIndex((prev) => prev + 1);
     },
-    [swiping, currentProfile, swipe]
+    [swiping, currentProfile, recordSwipe]
   );
 
-  if (profileLoading || loading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 text-sage-400 animate-spin mb-4" />
         <p className="text-cream-700">Finding people near you...</p>
-      </div>
-    );
-  }
-
-  if (!myProfile?.onboarded) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4">
-          <Compass className="w-8 h-8 text-sage-400" />
-        </div>
-        <h1 className="font-display text-2xl text-sage-800 mb-2">Complete your profile</h1>
-        <p className="text-cream-700 max-w-sm mb-6">
-          You need to finish setting up your profile before you can start discovering people.
-        </p>
       </div>
     );
   }
@@ -98,7 +88,10 @@ export default function DiscoverPage() {
         <p className="text-cream-700 max-w-sm mb-6">
           You&apos;ve seen everyone nearby. Check back later for new people!
         </p>
-        <button onClick={refetch} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">
+        <button
+          onClick={() => { setCurrentIndex(0); refresh(); }}
+          className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors"
+        >
           Refresh
         </button>
       </div>
@@ -107,9 +100,7 @@ export default function DiscoverPage() {
 
   const photos = currentProfile.photos;
   const currentPhoto = photos[photoIndex];
-  const photoUrl = currentPhoto?.photo_url?.startsWith('http')
-    ? currentPhoto.photo_url
-    : `${SUPABASE_STORAGE}${currentPhoto?.photo_url}`;
+  const photoUrl = resolvePhoto(currentPhoto?.photo_url || '');
 
   return (
     <>
@@ -152,7 +143,6 @@ export default function DiscoverPage() {
                 <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
                 <div className="flex items-center gap-1.5 text-white/80 text-sm mt-1">
                   {currentProfile.city && (<><MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span></>)}
-                  {currentProfile.distance !== undefined && <span className="text-white/60 ml-1">{currentProfile.distance} mi away</span>}
                 </div>
               </div>
               {currentProfile.verified && <div className="bg-sage-400 text-white text-xs font-medium px-2.5 py-1 rounded-lg">Verified</div>}
@@ -160,7 +150,7 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        {/* Action buttons — directly after the photo card */}
+        {/* Action buttons — between photo and details */}
         <div className="flex items-center justify-center gap-6 py-5">
           <button
             onClick={() => handleSwipe('left')}
@@ -232,26 +222,26 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Match modal */}
-      {matchModal && (
+      {/* Match modal — uses matchAlert from useDiscover */}
+      {matchAlert && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <Sparkles className="w-10 h-10 text-gold-400 mx-auto mb-4" />
             <h2 className="font-display text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
-            <p className="text-cream-700 mb-6">You and {matchModal.name} liked each other</p>
-            {matchModal.photos[0] && (
+            <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
+            {matchAlert.photo && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
                 <Image
-                  src={matchModal.photos[0].photo_url.startsWith('http') ? matchModal.photos[0].photo_url : `${SUPABASE_STORAGE}${matchModal.photos[0].photo_url}`}
-                  alt={matchModal.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
+                  src={resolvePhoto(matchAlert.photo)}
+                  alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
                 />
               </div>
             )}
             <div className="flex flex-col gap-3">
-              <button onClick={() => { setMatchModal(null); router.push('/matches'); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => { dismissMatchAlert(); router.push('/matches'); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors flex items-center justify-center gap-2">
                 <MessageCircle className="w-4 h-4" />Send a message
               </button>
-              <button onClick={() => setMatchModal(null)} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
+              <button onClick={dismissMatchAlert} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
                 Keep swiping
               </button>
             </div>
