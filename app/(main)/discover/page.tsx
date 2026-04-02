@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useDiscover } from '@/lib/useDiscover';
 import {
@@ -112,6 +111,22 @@ export default function DiscoverPage() {
   const currentPhoto = photos[photoIndex];
   const photoUrl = resolvePhoto(currentPhoto?.photo_url || '');
 
+  // Preload next profile's first photo + adjacent photos in current profile
+  useEffect(() => {
+    // Preload next 2 profiles' first photos
+    visibleProfiles.slice(1, 3).forEach((p) => {
+      if (p.photos[0]?.photo_url) {
+        const img = new window.Image();
+        img.src = resolvePhoto(p.photos[0].photo_url);
+      }
+    });
+    // Preload all photos in current profile
+    currentProfile.photos.forEach((p) => {
+      const img = new window.Image();
+      img.src = resolvePhoto(p.photo_url);
+    });
+  }, [currentProfile.id]);
+
   return (
     <>
       {/* Card — keyed by profile ID so React completely swaps the DOM element */}
@@ -119,7 +134,12 @@ export default function DiscoverPage() {
         {/* Photo */}
         <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px]">
           {currentPhoto && (
-            <Image src={photoUrl} alt={currentProfile.name} fill className="object-cover" priority unoptimized />
+            <img
+              src={photoUrl}
+              alt={currentProfile.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+            />
           )}
           {/* Tap left/right halves to navigate photos */}
           <div className="absolute inset-0 flex">
@@ -242,7 +262,7 @@ export default function DiscoverPage() {
             <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
             {matchAlert.photo && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
-                <Image src={resolvePhoto(matchAlert.photo)} alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized />
+                <img src={resolvePhoto(matchAlert.photo)} alt={matchAlert.name} className="object-cover w-full h-full" />
               </div>
             )}
             <div className="flex flex-col gap-3">
