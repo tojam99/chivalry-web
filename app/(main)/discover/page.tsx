@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useDiscover } from '@/lib/useDiscover';
@@ -31,57 +31,52 @@ export default function DiscoverPage() {
   const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
   const router = useRouter();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Track which profiles have been swiped — we remove them from the visible list
+  const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [swiping, setSwiping] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [animating, setAnimating] = useState(false);
 
-  const currentProfile = currentIndex < profiles.length ? profiles[currentIndex] : null;
-  const remaining = profiles.length - currentIndex;
+  // Filter out swiped profiles
+  const visibleProfiles = profiles.filter((p) => !swipedIds.has(p.id));
+  const currentProfile = visibleProfiles[0] || null;
+  const remaining = visibleProfiles.length;
 
-  // Reset photo index when profile changes
+  // Reset photo index when current profile changes
+  const prevId = useRef<string | null>(null);
   useEffect(() => {
-    setPhotoIndex(0);
-  }, [currentIndex]);
+    if (currentProfile && currentProfile.id !== prevId.current) {
+      prevId.current = currentProfile.id;
+      setPhotoIndex(0);
+    }
+  }, [currentProfile]);
 
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (matchAlert) return;
+      if (matchAlert || animating) return;
       if (e.key === 'ArrowLeft') handleSwipe('left');
       if (e.key === 'ArrowRight') handleSwipe('right');
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [matchAlert, swiping, currentProfile]);
-
-  const [hidden, setHidden] = useState(false);
+  }, [matchAlert, animating, currentProfile]);
 
   const handleSwipe = useCallback(
-    async (direction: 'left' | 'right') => {
-      if (swiping || !currentProfile) return;
-      setSwiping(true);
-      setSwipeDirection(direction);
+    (direction: 'left' | 'right') => {
+      if (animating || !currentProfile) return;
+      setAnimating(true);
 
-      // Animate card off screen
-      await new Promise((r) => setTimeout(r, 250));
-
-      // Hide completely while swapping
-      setHidden(true);
-      setSwipeDirection(null);
+      // Remove from visible list IMMEDIATELY — React will unmount old card and mount new one
+      const profileId = currentProfile.id;
+      setSwipedIds((prev) => new Set(prev).add(profileId));
 
       // Record swipe in background
-      recordSwipe(currentProfile.id, direction);
+      recordSwipe(profileId, direction);
 
-      // Advance index
-      setCurrentIndex((prev) => prev + 1);
-
-      // Brief pause then show new card
-      await new Promise((r) => setTimeout(r, 50));
-      setHidden(false);
-      setSwiping(false);
+      // Brief cooldown to prevent double-tap
+      setTimeout(() => setAnimating(false), 200);
     },
-    [swiping, currentProfile, recordSwipe]
+    [animating, currentProfile, recordSwipe]
   );
 
   if (loading) {
@@ -104,7 +99,7 @@ export default function DiscoverPage() {
           You&apos;ve seen everyone nearby. Check back later for new people!
         </p>
         <button
-          onClick={() => { setCurrentIndex(0); refresh(); }}
+          onClick={() => { setSwipedIds(new Set()); refresh(); }}
           className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors"
         >
           Refresh
@@ -119,22 +114,19 @@ export default function DiscoverPage() {
 
   return (
     <>
-      <div
-        className={`relative transition-all duration-300 ${
-          hidden ? 'opacity-0' :
-          swipeDirection === 'left' ? '-translate-x-40 -rotate-12 opacity-0'
-            : swipeDirection === 'right' ? 'translate-x-40 rotate-12 opacity-0' : ''
-        }`}
-      >
+      {/* Card — keyed by profile ID so React completely swaps the DOM element */}
+      <div key={currentProfile.id}>
         {/* Photo */}
         <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px]">
           {currentPhoto && (
             <Image src={photoUrl} alt={currentProfile.name} fill className="object-cover" priority unoptimized />
           )}
+          {/* Tap left/right halves to navigate photos */}
           <div className="absolute inset-0 flex">
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.max(0, photoIndex - 1))} />
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.min(photos.length - 1, photoIndex + 1))} />
           </div>
+          {/* Photo dots */}
           {photos.length > 1 && (
             <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
               {photos.map((_, i) => (
@@ -142,6 +134,7 @@ export default function DiscoverPage() {
               ))}
             </div>
           )}
+          {/* Arrow buttons */}
           {photoIndex > 0 && (
             <button onClick={() => setPhotoIndex(photoIndex - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
               <ChevronLeft className="w-4 h-4" />
@@ -152,7 +145,9 @@ export default function DiscoverPage() {
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
+          {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+          {/* Name overlay */}
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
@@ -166,19 +161,19 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        {/* Action buttons — between photo and details */}
+        {/* Swipe buttons */}
         <div className="flex items-center justify-center gap-6 py-5">
           <button
             onClick={() => handleSwipe('left')}
-            disabled={swiping}
-            className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg shadow-cream-300/30 hover:border-red-300 hover:shadow-red-200/30 transition-all active:scale-95 disabled:opacity-50"
+            disabled={animating}
+            className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg shadow-cream-300/30 hover:border-red-300 hover:shadow-red-200/30 transition-all active:scale-90 disabled:opacity-50"
           >
             <X className="w-7 h-7 text-red-400" />
           </button>
           <button
             onClick={() => handleSwipe('right')}
-            disabled={swiping}
-            className="w-20 h-20 bg-sage-400 rounded-full flex items-center justify-center shadow-lg shadow-sage-400/30 hover:bg-sage-500 hover:shadow-sage-500/30 transition-all active:scale-95 disabled:opacity-50"
+            disabled={animating}
+            className="w-20 h-20 bg-sage-400 rounded-full flex items-center justify-center shadow-lg shadow-sage-400/30 hover:bg-sage-500 hover:shadow-sage-500/30 transition-all active:scale-90 disabled:opacity-50"
           >
             <Heart className="w-9 h-9 text-white" fill="white" />
           </button>
@@ -187,7 +182,7 @@ export default function DiscoverPage() {
           {remaining} {remaining === 1 ? 'person' : 'people'} left
         </p>
 
-        {/* Profile details below buttons */}
+        {/* Profile details */}
         <div className="space-y-4">
           {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
           <div className="flex flex-wrap gap-2">
@@ -238,7 +233,7 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Match modal — uses matchAlert from useDiscover */}
+      {/* Match modal */}
       {matchAlert && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
@@ -247,10 +242,7 @@ export default function DiscoverPage() {
             <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
             {matchAlert.photo && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
-                <Image
-                  src={resolvePhoto(matchAlert.photo)}
-                  alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
-                />
+                <Image src={resolvePhoto(matchAlert.photo)} alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized />
               </div>
             )}
             <div className="flex flex-col gap-3">
