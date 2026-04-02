@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
       <main className="max-w-2xl mx-auto px-6 py-16">
         <h1 className="font-display text-4xl text-sage-800 mb-2">Privacy Policy</h1>
-        <p className="text-cream-600 text-sm mb-10">Last updated: March 13, 2026</p>
+        <p className="text-cream-600 text-sm mb-10">Last updated: April 2, 2026</p>
 
         <div className="prose-chivalry">
           <p>Chivalry (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the Chivalry mobile application and website. This page informs you of our policies regarding the collection, use, and disclosure of personal information when you use our app.</p>
@@ -83,10 +83,30 @@ export default function PrivacyPage() {
           <h2>9. Data retention</h2>
           <p>We retain your data for as long as your account is active. When you delete your account, your profile is deactivated and no longer visible to other users. We may retain certain data for legitimate business purposes and legal compliance.</p>
 
-          <h2>10. Changes to this policy</h2>
+          <h2>10. International data transfers</h2>
+          <p>Your data may be transferred to and processed in the United States, where our servers are located. By using Chivalry, you consent to the transfer of your information to the United States and other countries that may have different data protection laws than your country of residence.</p>
+
+          <h2>11. European users (GDPR)</h2>
+          <p>If you are located in the European Economic Area (EEA), United Kingdom, or Switzerland, you have additional rights under the General Data Protection Regulation (GDPR):</p>
+          <ul>
+            <li><strong>Legal basis:</strong> We process your data based on your consent (account creation), contractual necessity (providing our service), and legitimate interests (improving our service, safety)</li>
+            <li><strong>Right to access:</strong> Request a copy of all personal data we hold about you</li>
+            <li><strong>Right to rectification:</strong> Correct inaccurate personal data</li>
+            <li><strong>Right to erasure:</strong> Request deletion of your personal data</li>
+            <li><strong>Right to restriction:</strong> Request we limit processing of your data</li>
+            <li><strong>Right to data portability:</strong> Receive your data in a machine-readable format</li>
+            <li><strong>Right to object:</strong> Object to processing based on legitimate interests</li>
+            <li><strong>Right to withdraw consent:</strong> Withdraw consent at any time by deleting your account</li>
+          </ul>
+          <p>To exercise any of these rights, contact us at support@chivalry.date. We will respond within 30 days.</p>
+
+          <h2>12. California users (CCPA)</h2>
+          <p>If you are a California resident, you have the right to know what personal information we collect, request deletion of your data, and opt out of the sale of personal information. We do not sell personal information to third parties.</p>
+
+          <h2>13. Changes to this policy</h2>
           <p>We may update this Privacy Policy from time to time. We will notify you of changes by posting the new policy on this page and updating the &quot;Last updated&quot; date.</p>
 
-          <h2>11. Contact us</h2>
+          <h2>14. Contact us</h2>
           <p>If you have questions about this Privacy Policy, please visit our <Link href="/support" className="text-sage-400 hover:underline">Support page</Link> or email us at support@chivalry.date.</p>
         </div>
       </main>
