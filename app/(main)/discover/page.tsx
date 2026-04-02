@@ -55,22 +55,30 @@ export default function DiscoverPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [matchAlert, swiping, currentProfile]);
 
+  const [hidden, setHidden] = useState(false);
+
   const handleSwipe = useCallback(
     async (direction: 'left' | 'right') => {
       if (swiping || !currentProfile) return;
       setSwiping(true);
       setSwipeDirection(direction);
 
-      // Start the swipe animation
+      // Animate card off screen
       await new Promise((r) => setTimeout(r, 250));
 
-      // Advance to next card immediately
-      setCurrentIndex((prev) => prev + 1);
+      // Hide completely while swapping
+      setHidden(true);
       setSwipeDirection(null);
 
-      // Record swipe in background (don't block UI)
+      // Record swipe in background
       recordSwipe(currentProfile.id, direction);
 
+      // Advance index
+      setCurrentIndex((prev) => prev + 1);
+
+      // Brief pause then show new card
+      await new Promise((r) => setTimeout(r, 50));
+      setHidden(false);
       setSwiping(false);
     },
     [swiping, currentProfile, recordSwipe]
@@ -113,8 +121,9 @@ export default function DiscoverPage() {
     <>
       <div
         className={`relative transition-all duration-300 ${
-          swipeDirection === 'left' ? '-translate-x-20 -rotate-6 opacity-0'
-            : swipeDirection === 'right' ? 'translate-x-20 rotate-6 opacity-0' : ''
+          hidden ? 'opacity-0' :
+          swipeDirection === 'left' ? '-translate-x-40 -rotate-12 opacity-0'
+            : swipeDirection === 'right' ? 'translate-x-40 rotate-12 opacity-0' : ''
         }`}
       >
         {/* Photo */}
