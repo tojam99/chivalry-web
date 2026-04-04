@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase-browser';
 import PlacePicker from '@/components/PlacePicker';
 import {
   ChevronRight, ChevronLeft, Camera, Loader2, MapPin, Check, X, Trash2,
-  Heart, Sparkles, Shield, ArrowLeft, ArrowRight,
+  Heart, Sparkles, Shield, GripVertical,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -223,22 +223,82 @@ export default function OnboardingPage() {
     await supabase.from('profile_photos').delete().eq('id', photoId);
     setPhotos((prev) => {
       const filtered = prev.filter((p) => p.id !== photoId);
-      // Re-index sort_order after deletion
       return filtered.map((p, i) => ({ ...p, sort_order: i }));
     });
   }
 
-  async function handleSwapPhotos(fromIdx: number, toIdx: number) {
-    if (toIdx < 0 || toIdx >= photos.length) return;
+  // ── Drag & Drop (desktop + mobile) ──
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const touchStartRef = useRef<{ idx: number; startY: number; startX: number } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  async function handleReorder(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx || toIdx < 0 || toIdx >= photos.length) return;
     const updated = [...photos];
-    [updated[fromIdx], updated[toIdx]] = [updated[toIdx], updated[fromIdx]];
-    // Update sort_order locally
+    const [moved] = updated.splice(fromIdx, 1);
+    updated.splice(toIdx, 0, moved);
     const reindexed = updated.map((p, i) => ({ ...p, sort_order: i }));
     setPhotos(reindexed);
-    // Persist to DB
     for (const p of reindexed) {
       await supabase.from('profile_photos').update({ sort_order: p.sort_order }).eq('id', p.id);
     }
+  }
+
+  // Desktop drag handlers
+  function onDragStart(e: React.DragEvent, idx: number) {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    // Make drag image semi-transparent
+    if (e.currentTarget instanceof HTMLElement) {
+      e.dataTransfer.setDragImage(e.currentTarget, 50, 50);
+    }
+  }
+  function onDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (idx < photos.length) setDragOverIdx(idx);
+  }
+  function onDragEnd() {
+    if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+      handleReorder(dragIdx, dragOverIdx);
+    }
+    setDragIdx(null);
+    setDragOverIdx(null);
+  }
+
+  // Mobile touch handlers
+  function onTouchStart(idx: number, e: React.TouchEvent) {
+    const touch = e.touches[0];
+    touchStartRef.current = { idx, startX: touch.clientX, startY: touch.clientY };
+    // Long press to initiate drag — set drag state after 200ms
+    const timer = setTimeout(() => {
+      setDragIdx(idx);
+    }, 200);
+    (e.currentTarget as any)._dragTimer = timer;
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (dragIdx === null || !gridRef.current) return;
+    const touch = e.touches[0];
+    // Find which grid cell the touch is over
+    const elements = gridRef.current.querySelectorAll('[data-photo-idx]');
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        const idx = parseInt(el.getAttribute('data-photo-idx') || '-1');
+        if (idx >= 0 && idx < photos.length) setDragOverIdx(idx);
+      }
+    });
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    clearTimeout((e.currentTarget as any)._dragTimer);
+    if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+      handleReorder(dragIdx, dragOverIdx);
+    }
+    setDragIdx(null);
+    setDragOverIdx(null);
+    touchStartRef.current = null;
   }
 
   function handleContinue() {
@@ -316,77 +376,71 @@ export default function OnboardingPage() {
   function resolvePhoto(url: string): string { return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`; }
 
   function renderPhotoGrid() {
-    function photoSlot(i: number, className: string) {
+    const slots = [];
+    for (let i = 0; i < 6; i++) {
       const photo = photos[i];
+      const isDragging = dragIdx === i;
+      const isDragOver = dragOverIdx === i && dragIdx !== i;
+
       if (photo) {
-        return (
-          <div key={photo.id} className={`relative rounded-2xl overflow-hidden bg-cream-300 group ${className}`}>
-            <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            {/* Controls overlay — visible on hover */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+        slots.push(
+          <div
+            key={photo.id}
+            data-photo-idx={i}
+            draggable
+            onDragStart={(e) => onDragStart(e, i)}
+            onDragOver={(e) => onDragOver(e, i)}
+            onDragEnd={onDragEnd}
+            onTouchStart={(e) => onTouchStart(i, e)}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            className={`relative rounded-2xl overflow-hidden bg-cream-300 group cursor-grab active:cursor-grabbing transition-all duration-150 ${
+              i === 0 ? 'col-span-2 row-span-2' : ''
+            } ${isDragging ? 'opacity-40 scale-95' : ''} ${isDragOver ? 'ring-2 ring-sage-400 ring-offset-2 scale-[1.02]' : ''}`}
+          >
+            <div className={`relative w-full ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
+              <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+            </div>
+            {/* Drag handle hint */}
+            <div className="absolute top-2 left-2 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <GripVertical className="w-3.5 h-3.5 text-white" />
+            </div>
             {/* Delete */}
-            <button onClick={() => handleDeletePhoto(photo.id)}
+            <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id); }}
               className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <Trash2 className="w-3.5 h-3.5 text-white" />
             </button>
-            {/* Reorder arrows */}
-            {photos.length > 1 && (
-              <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                {i > 0 && (
-                  <button onClick={() => handleSwapPhotos(i, i - 1)}
-                    className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center"
-                    title="Move left">
-                    <ArrowLeft className="w-3 h-3 text-white" />
-                  </button>
-                )}
-                {i < photos.length - 1 && (
-                  <button onClick={() => handleSwapPhotos(i, i + 1)}
-                    className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center"
-                    title="Move right">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </button>
-                )}
-              </div>
-            )}
             {/* Main badge */}
             {i === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide z-10">Main</div>}
           </div>
         );
       } else if (i === photos.length) {
-        return (
+        slots.push(
           <button key={`add-${i}`} onClick={() => fileInputRef.current?.click()} disabled={uploading}
-            className={`rounded-2xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors ${className}`}>
-            {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : (
-              <><Camera className={`text-cream-500 ${i === 0 ? 'w-8 h-8' : 'w-5 h-5'}`} /><span className={`text-cream-500 mt-1.5 font-medium ${i === 0 ? 'text-xs' : 'text-[10px]'}`}>Add Photo</span></>
-            )}
+            data-photo-idx={i}
+            className={`rounded-2xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors ${
+              i === 0 ? 'col-span-2 row-span-2' : ''
+            }`}>
+            <div className={`w-full flex flex-col items-center justify-center ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
+              {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : (
+                <><Camera className={`text-cream-500 ${i === 0 ? 'w-8 h-8' : 'w-5 h-5'}`} /><span className={`text-cream-500 mt-1.5 font-medium ${i === 0 ? 'text-xs' : 'text-[10px]'}`}>Add Photo</span></>
+              )}
+            </div>
           </button>
         );
+      } else {
+        slots.push(
+          <div key={`empty-${i}`} data-photo-idx={i}
+            className={`rounded-2xl bg-cream-100 border border-cream-200 ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
+            <div className={`w-full ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`} />
+          </div>
+        );
       }
-      return <div key={`empty-${i}`} className={`rounded-2xl bg-cream-100 border border-cream-200 ${className}`} />;
     }
 
     return (
-      <div className="space-y-2.5">
-        <div className="flex gap-2.5" style={{ height: '280px' }}>
-          <div className="flex-[2] min-w-0 relative">
-            {photoSlot(0, 'w-full h-full')}
-          </div>
-          <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-            <div className="flex-1 relative">
-              {photoSlot(1, 'w-full h-full')}
-            </div>
-            <div className="flex-1 relative">
-              {photoSlot(2, 'w-full h-full')}
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2.5">
-          {[3, 4, 5].map((i) => (
-            <div key={`slot-${i}`} className="relative aspect-square">
-              {photoSlot(i, 'w-full h-full')}
-            </div>
-          ))}
-        </div>
+      <div ref={gridRef} className="grid grid-cols-3 gap-2.5">
+        {slots}
       </div>
     );
   }
@@ -465,7 +519,7 @@ export default function OnboardingPage() {
             <div className="space-y-5 animate-fadeIn">
               <div>
                 <h2 className="font-display text-2xl text-sage-800">Add your best photos</h2>
-                <p className="text-cream-600 text-sm mt-1">At least 1 photo required, up to 6. Hover to reorder.</p>
+                <p className="text-cream-600 text-sm mt-1">At least 1 required, up to 6. Drag to reorder.</p>
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
               {renderPhotoGrid()}
