@@ -83,28 +83,39 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start justify-center py-6 px-4">
-        <div className="bg-cream-50 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
-            <span className="text-xs text-cream-600 font-medium">Profile Preview</span>
-            <div className="w-6" />
+      <div className="min-h-full flex items-start justify-center py-4 sm:py-6 px-3 sm:px-4">
+        <div className="bg-cream-50 rounded-3xl max-w-md sm:max-w-lg w-full overflow-hidden shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-2">
+            <button onClick={onClose} className="w-8 h-8 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 hover:text-sage-800 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <span className="text-sm text-sage-800 font-bold">Profile Preview</span>
+            <div className="w-8" />
           </div>
-          <div className="relative w-full h-[420px] overflow-hidden bg-cream-300">
+          {/* Photo */}
+          <div className="relative w-full h-[380px] sm:h-[440px] overflow-hidden bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
             {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
             {photoIdx < photos.length-1 && (<button onClick={() => setPhotoIdx(photoIdx+1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
             <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3">
-              <div className="flex items-center gap-2"><h2 className="text-white font-bold text-2xl">{profile.name}, {profile.age}</h2>{profile.verified && <ShieldCheck className="w-5 h-5 text-green-400" />}</div>
+            <div className="absolute bottom-3 left-4 right-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-white font-bold text-2xl">{profile.name}, {profile.age}</h2>
+                {profile.verified && <ShieldCheck className="w-5 h-5 text-green-400" />}
+                {profile.available_now && (
+                  <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide flex items-center gap-1">
+                    <Zap className="w-3 h-3" />Available Now
+                  </span>
+                )}
+              </div>
               {(profile.profession || profile.education) && (
                 <p className="text-white/80 text-sm mt-0.5">{[profile.profession, profile.education].filter(Boolean).join(' · ')}</p>
               )}
               {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
             </div>
           </div>
-          {profile.available_now && (<div className="mx-5 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
           <div className="px-5 pb-6 space-y-4 mt-4">
             {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
             {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
