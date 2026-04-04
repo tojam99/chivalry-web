@@ -376,71 +376,80 @@ export default function OnboardingPage() {
   function resolvePhoto(url: string): string { return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`; }
 
   function renderPhotoGrid() {
-    const slots = [];
-    for (let i = 0; i < 6; i++) {
-      const photo = photos[i];
-      const isDragging = dragIdx === i;
-      const isDragOver = dragOverIdx === i && dragIdx !== i;
+    const isDragging_ = (i: number) => dragIdx === i;
+    const isDragOver_ = (i: number) => dragOverIdx === i && dragIdx !== i;
 
+    function dragProps(i: number) {
+      return {
+        'data-photo-idx': i,
+        draggable: true,
+        onDragStart: (e: React.DragEvent) => onDragStart(e, i),
+        onDragOver: (e: React.DragEvent) => onDragOver(e, i),
+        onDragEnd: onDragEnd,
+        onTouchStart: (e: React.TouchEvent) => onTouchStart(i, e),
+        onTouchMove: onTouchMove,
+        onTouchEnd: onTouchEnd,
+      };
+    }
+
+    function dragClasses(i: number) {
+      return `${isDragging_(i) ? 'opacity-40 scale-95' : ''} ${isDragOver_(i) ? 'ring-2 ring-sage-400 ring-offset-2 scale-[1.02]' : ''}`;
+    }
+
+    function photoCell(i: number) {
+      const photo = photos[i];
       if (photo) {
-        slots.push(
-          <div
-            key={photo.id}
-            data-photo-idx={i}
-            draggable
-            onDragStart={(e) => onDragStart(e, i)}
-            onDragOver={(e) => onDragOver(e, i)}
-            onDragEnd={onDragEnd}
-            onTouchStart={(e) => onTouchStart(i, e)}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            className={`relative rounded-2xl overflow-hidden bg-cream-300 group cursor-grab active:cursor-grabbing transition-all duration-150 ${
-              i === 0 ? 'col-span-2 row-span-2' : ''
-            } ${isDragging ? 'opacity-40 scale-95' : ''} ${isDragOver ? 'ring-2 ring-sage-400 ring-offset-2 scale-[1.02]' : ''}`}
-          >
-            <div className={`relative w-full ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
-              <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-            </div>
-            {/* Drag handle hint */}
+        return (
+          <div {...dragProps(i)}
+            className={`relative w-full h-full rounded-2xl overflow-hidden bg-cream-300 group cursor-grab active:cursor-grabbing transition-all duration-150 ${dragClasses(i)}`}>
+            <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
             <div className="absolute top-2 left-2 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <GripVertical className="w-3.5 h-3.5 text-white" />
             </div>
-            {/* Delete */}
             <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id); }}
               className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <Trash2 className="w-3.5 h-3.5 text-white" />
             </button>
-            {/* Main badge */}
             {i === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide z-10">Main</div>}
           </div>
         );
       } else if (i === photos.length) {
-        slots.push(
-          <button key={`add-${i}`} onClick={() => fileInputRef.current?.click()} disabled={uploading}
-            data-photo-idx={i}
-            className={`rounded-2xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors ${
-              i === 0 ? 'col-span-2 row-span-2' : ''
-            }`}>
-            <div className={`w-full flex flex-col items-center justify-center ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}>
-              {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : (
-                <><Camera className={`text-cream-500 ${i === 0 ? 'w-8 h-8' : 'w-5 h-5'}`} /><span className={`text-cream-500 mt-1.5 font-medium ${i === 0 ? 'text-xs' : 'text-[10px]'}`}>Add Photo</span></>
-              )}
-            </div>
+        return (
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploading} data-photo-idx={i}
+            className="w-full h-full rounded-2xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors">
+            {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : (
+              <><Camera className={`text-cream-500 ${i === 0 ? 'w-8 h-8' : 'w-5 h-5'}`} /><span className={`text-cream-500 mt-1.5 font-medium ${i === 0 ? 'text-xs' : 'text-[10px]'}`}>Add Photo</span></>
+            )}
           </button>
         );
-      } else {
-        slots.push(
-          <div key={`empty-${i}`} data-photo-idx={i}
-            className={`rounded-2xl bg-cream-100 border border-cream-200 ${i === 0 ? 'col-span-2 row-span-2' : ''}`}>
-            <div className={`w-full ${i === 0 ? 'aspect-[3/4]' : 'aspect-square'}`} />
-          </div>
-        );
       }
+      return <div data-photo-idx={i} className="w-full h-full rounded-2xl bg-cream-100 border border-cream-200" />;
     }
 
     return (
-      <div ref={gridRef} className="grid grid-cols-3 gap-2.5">
-        {slots}
+      <div ref={gridRef} className="space-y-2.5">
+        {/* Top row: main photo (2/3) + 2 stacked (1/3) — fixed height, no gaps */}
+        <div className="flex gap-2.5" style={{ height: '280px' }}>
+          <div className="flex-[2] min-w-0 relative overflow-hidden rounded-2xl">
+            {photoCell(0)}
+          </div>
+          <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+            <div className="flex-1 min-h-0 relative overflow-hidden rounded-2xl">
+              {photoCell(1)}
+            </div>
+            <div className="flex-1 min-h-0 relative overflow-hidden rounded-2xl">
+              {photoCell(2)}
+            </div>
+          </div>
+        </div>
+        {/* Bottom row: 3 equal squares */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {[3, 4, 5].map((i) => (
+            <div key={`slot-${i}`} className="relative aspect-square overflow-hidden rounded-2xl">
+              {photoCell(i)}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
