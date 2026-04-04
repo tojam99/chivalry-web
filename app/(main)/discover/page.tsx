@@ -353,7 +353,7 @@ export default function DiscoverPage() {
           {/* Request a Date — tappable date idea pills */}
           {currentProfile.date_ideas.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Request a Date</p></div>
+              <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Request a Date</p></div>
               <div className="space-y-2">
                 {currentProfile.date_ideas.map((idea, i) => (
                   <button key={i} onClick={() => handleDateRequest(idea)}
@@ -372,7 +372,7 @@ export default function DiscoverPage() {
           {/* Basic Info */}
           {(currentProfile.identification || currentProfile.profession || currentProfile.education || currentProfile.height || currentProfile.body_type || currentProfile.ethnicity || currentProfile.religion) && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
+              <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Basic info</p></div>
               <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
                 {currentProfile.verified && (
                   <div className="flex items-center gap-2 px-4 py-2.5"><ShieldCheck className="w-4 h-4 text-sage-600" /><span className="text-sm font-semibold text-sage-600">Verified Profile</span></div>
@@ -398,7 +398,7 @@ export default function DiscoverPage() {
           {/* Lifestyle */}
           {(currentProfile.drinking || currentProfile.smoking || currentProfile.workout || currentProfile.children) && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
+              <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
               <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
                 {[
                   { label: 'Drinking', value: currentProfile.drinking },
@@ -418,7 +418,7 @@ export default function DiscoverPage() {
           {/* Interests */}
           {currentProfile.interests.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
+              <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Interests</p></div>
               <div className="flex flex-wrap gap-1.5">
                 {currentProfile.interests.map((interest, i) => (<span key={i} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{interest}</span>))}
               </div>
@@ -428,7 +428,7 @@ export default function DiscoverPage() {
           {/* Looking For */}
           {currentProfile.looking_for && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
+              <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Looking for</p></div>
               <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{currentProfile.looking_for}</div>
             </div>
           )}

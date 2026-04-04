@@ -63,7 +63,7 @@ export default function SignupPage() {
         <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <Check className="w-8 h-8 text-sage-400" />
         </div>
-        <h1 className="font-display text-3xl text-sage-800 mb-3">Check your email</h1>
+        <h1 className="font-bold text-3xl text-sage-800 mb-3">Check your email</h1>
         <p className="text-cream-700 mb-2">
           We sent a confirmation link to <span className="font-medium text-sage-800">{email}</span>
         </p>
@@ -83,7 +83,7 @@ export default function SignupPage() {
   return (
     <div>
       <div className="text-center mb-8">
-        <h1 className="font-display text-3xl text-sage-800 mb-2">Create your account</h1>
+        <h1 className="font-bold text-3xl text-sage-800 mb-2">Create your account</h1>
         <p className="text-cream-700">Join Chivalry and start going on real dates</p>
       </div>
 

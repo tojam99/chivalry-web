@@ -130,7 +130,7 @@ export default function PlacePicker({ open, onClose, onSelect, title = 'Search L
       <div className="bg-cream-50 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-cream-200 shrink-0">
-          <h3 className="font-display text-lg text-sage-800">{title}</h3>
+          <h3 className="font-bold text-lg text-sage-800">{title}</h3>
           <button onClick={() => { setQuery(''); setResults([]); onClose(); }} className="text-cream-600 hover:text-sage-800"><X className="w-5 h-5" /></button>
         </div>
 

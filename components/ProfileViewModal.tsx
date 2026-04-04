@@ -129,13 +129,16 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 )}
                 {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
                 {photoIdx < photos.length - 1 && (<button onClick={() => setPhotoIdx(photoIdx + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-white font-display text-2xl">{profile.name}, {profile.age}</h2>
+                    <h2 className="text-white font-bold text-2xl">{profile.name}, {profile.age}</h2>
                     {profile.verified && <ShieldCheck className="w-5 h-5 text-green-400" />}
                   </div>
-                  {profile.city && <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5"><MapPin className="w-3 h-3" /><span>{profile.city}</span></div>}
+                  {(profile.profession || profile.education) && (
+                    <p className="text-white/80 text-sm mt-0.5">{[profile.profession, profile.education].filter(Boolean).join(' · ')}</p>
+                  )}
+                  {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" /><span>{profile.city}</span></div>}
                 </div>
               </div>
 
@@ -159,7 +162,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 {/* Request a Date — only if matchId provided and no success yet */}
                 {dateIdeas.length > 0 && matchId && !successMsg && (
                   <div>
-                    <div className="flex items-center gap-2 mb-1"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Request a Date</p></div>
+                    <div className="flex items-center gap-2 mb-1"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Request a Date</p></div>
                     <p className="text-[11px] text-cream-500 mb-2">Tap a date idea to request it</p>
                     <div className="space-y-2">
                       {dateIdeas.map((idea) => (
@@ -179,7 +182,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 {/* Basic Info */}
                 {(profile.identification || profile.profession || profile.education || profile.height || profile.body_type || profile.ethnicity || profile.religion) && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
+                    <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Basic info</p></div>
                     <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
                       {[
                         { label: 'Identification', value: profile.identification },
@@ -202,7 +205,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 {/* Lifestyle */}
                 {(profile.drinking || profile.smoking || profile.workout || profile.children) && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
+                    <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
                     <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
                       {[
                         { label: 'Drinking', value: profile.drinking },
@@ -222,7 +225,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 {/* Interests */}
                 {interests.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
+                    <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Interests</p></div>
                     <div className="flex flex-wrap gap-1.5">{interests.map((i, idx) => (<span key={idx} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{i}</span>))}</div>
                   </div>
                 )}
@@ -230,7 +233,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
                 {/* Looking For */}
                 {profile.looking_for && (
                   <div>
-                    <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
+                    <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-bold text-cream-600 uppercase tracking-wide">Looking for</p></div>
                     <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{profile.looking_for}</div>
                   </div>
                 )}
@@ -248,7 +251,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
           <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl">
             <div className="bg-gradient-to-b from-sage-400 to-sage-500 py-6 px-5 text-center">
               <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3"><Calendar className="w-7 h-7 text-white" /></div>
-              <h3 className="text-2xl font-display text-white">Request a Date</h3>
+              <h3 className="text-2xl font-bold text-white">Request a Date</h3>
               <p className="text-white/80 text-sm mt-1">with {profile?.name || 'this person'}</p>
             </div>
             <div className="p-5 space-y-4">
@@ -283,7 +286,7 @@ export default function ProfileViewModal({ open, onClose, userId, matchId, myPro
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-6">
           <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
             <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-2xl">🎟️</span></div>
-            <h3 className="font-display text-xl text-sage-800 mb-2">No Date Request Credits</h3>
+            <h3 className="font-bold text-xl text-sage-800 mb-2">No Date Request Credits</h3>
             <p className="text-cream-700 text-sm mb-6">Upgrade to Premium for unlimited requests, or purchase a credit pack.</p>
             <button onClick={() => setNoCreditsModal(false)} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500">Got it</button>
           </div>

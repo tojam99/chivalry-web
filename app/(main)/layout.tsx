@@ -45,9 +45,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="max-w-6xl mx-auto w-full flex items-center justify-between">
           <Link href="/discover" className="flex items-center gap-2.5">
             <div className="w-9 h-9 bg-sage-400 rounded-xl flex items-center justify-center">
-              <span className="text-white font-display text-lg leading-none">C</span>
+              <span className="text-white font-bold text-lg leading-none">C</span>
             </div>
-            <span className="font-display text-xl text-sage-800">Chivalry</span>
+            <span className="font-bold text-xl text-sage-800">Chivalry</span>
           </Link>
 
           <nav className="flex items-center gap-1">
@@ -84,9 +84,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-cream-50/80 backdrop-blur-xl border-b border-cream-300/50 h-14 flex items-center justify-between px-4">
         <Link href="/discover" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-sage-400 rounded-lg flex items-center justify-center">
-            <span className="text-white font-display text-base leading-none">C</span>
+            <span className="text-white font-bold text-base leading-none">C</span>
           </div>
-          <span className="font-display text-lg text-sage-800">Chivalry</span>
+          <span className="font-bold text-lg text-sage-800">Chivalry</span>
         </Link>
         <button
           onClick={handleSignOut}

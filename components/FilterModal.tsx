@@ -42,7 +42,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-cream-200 sticky top-0 bg-cream-50 z-10">
           <button onClick={handleReset} className="text-sm font-medium text-cream-600 hover:text-sage-800">Reset</button>
-          <h3 className="font-display text-lg text-sage-800">Filters</h3>
+          <h3 className="font-bold text-lg text-sage-800">Filters</h3>
           <button onClick={handleApply} className="text-sm font-bold text-sage-400 hover:text-sage-600">Apply</button>
         </div>
 

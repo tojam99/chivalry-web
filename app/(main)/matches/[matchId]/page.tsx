@@ -122,7 +122,7 @@ export default function ChatPage() {
             <div className="w-20 h-20 rounded-full overflow-hidden mb-4 border-4 border-cream-200">
               {matchInfo.other_user.photo_url ? (<img src={resolvePhoto(matchInfo.other_user.photo_url)} alt={matchInfo.other_user.name} className="object-cover w-full h-full" />) : <div className="w-full h-full bg-cream-300" />}
             </div>
-            <p className="font-display text-lg text-sage-800 mb-1">You matched with {matchInfo.other_user.name}!</p>
+            <p className="font-bold text-lg text-sage-800 mb-1">You matched with {matchInfo.other_user.name}!</p>
             <p className="text-cream-700 text-sm">Send a message to get things started</p>
           </div>
         ) : (

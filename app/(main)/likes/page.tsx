@@ -246,7 +246,7 @@ export default function LikesPage() {
         <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4">
           <Heart className="w-8 h-8 text-sage-400" />
         </div>
-        <h1 className="font-display text-2xl text-sage-800 mb-2">No likes yet</h1>
+        <h1 className="font-bold text-2xl text-sage-800 mb-2">No likes yet</h1>
         <p className="text-cream-700 max-w-sm">When someone likes your profile, they&apos;ll appear here. Keep swiping!</p>
       </div>
     );
@@ -255,7 +255,7 @@ export default function LikesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-display text-2xl text-sage-800">Likes & Matches</h1>
+        <h1 className="font-bold text-2xl text-sage-800">Likes & Matches</h1>
       </div>
 
       {/* Tabs */}
@@ -274,7 +274,7 @@ export default function LikesPage() {
           {matches.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4"><MessageCircle className="w-8 h-8 text-sage-400" /></div>
-              <h2 className="font-display text-xl text-sage-800 mb-2">No matches yet</h2>
+              <h2 className="font-bold text-xl text-sage-800 mb-2">No matches yet</h2>
               <p className="text-cream-700 text-sm max-w-sm">Keep swiping! When you and someone both like each other, you&apos;ll match.</p>
             </div>
           ) : (
@@ -304,7 +304,7 @@ export default function LikesPage() {
       {!isPremium && (
         <div className="bg-gradient-to-r from-gold-400/20 to-sage-100 border border-gold-400/30 rounded-2xl p-5 mb-6 text-center">
           <Crown className="w-8 h-8 text-gold-600 mx-auto mb-2" />
-          <h3 className="font-display text-lg text-sage-800 mb-1">See who likes you</h3>
+          <h3 className="font-bold text-lg text-sage-800 mb-1">See who likes you</h3>
           <p className="text-cream-700 text-sm mb-3">Upgrade to Premium to see and match with people who already like you.</p>
           <button className="bg-gold-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-gold-600 transition-colors text-sm">
             Upgrade to Premium
@@ -402,7 +402,7 @@ export default function LikesPage() {
                 )}
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3">
-                  <h2 className="text-white font-display text-2xl">{selectedProfile.name}, {selectedProfile.age}</h2>
+                  <h2 className="text-white font-bold text-2xl">{selectedProfile.name}, {selectedProfile.age}</h2>
                   {selectedProfile.city && (
                     <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5">
                       <MapPin className="w-3 h-3" /><span>{selectedProfile.city}</span>
@@ -444,7 +444,7 @@ export default function LikesPage() {
                 </div>
                 {selectedProfile.interests.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Interests</p>
+                    <p className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2">Interests</p>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedProfile.interests.map((interest, i) => (
                         <span key={i} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{interest}</span>
@@ -454,7 +454,7 @@ export default function LikesPage() {
                 )}
                 {selectedProfile.date_ideas.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Date ideas</p>
+                    <p className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2">Date ideas</p>
                     <div className="space-y-2">
                       {selectedProfile.date_ideas.map((idea, i) => (
                         <div key={i} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3">
@@ -481,7 +481,7 @@ export default function LikesPage() {
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <Sparkles className="w-10 h-10 text-gold-400 mx-auto mb-4" />
-            <h2 className="font-display text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
+            <h2 className="font-bold text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
             <p className="text-cream-700 mb-6">You and {matchModal.name} liked each other</p>
             {matchModal.photos[0] && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
@@ -505,7 +505,7 @@ export default function LikesPage() {
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <Crown className="w-10 h-10 text-gold-600 mx-auto mb-4" />
-            <h2 className="font-display text-2xl text-sage-800 mb-2">Upgrade to Premium</h2>
+            <h2 className="font-bold text-2xl text-sage-800 mb-2">Upgrade to Premium</h2>
             <p className="text-cream-700 mb-6">See who likes you, match instantly, and never miss a connection.</p>
             <div className="flex flex-col gap-3">
               <button className="w-full bg-gold-400 text-white font-medium py-3 rounded-2xl hover:bg-gold-600 transition-colors">

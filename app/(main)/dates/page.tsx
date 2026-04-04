@@ -48,7 +48,7 @@ function ConfirmModal({ open, title, message, confirmText, confirmColor, onConfi
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <h3 className="font-display text-xl text-sage-800 mb-2">{title}</h3>
+        <h3 className="font-bold text-xl text-sage-800 mb-2">{title}</h3>
         <p className="text-cream-700 text-sm mb-6 whitespace-pre-line">{message}</p>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-cream-200 text-cream-700 font-medium text-sm">Cancel</button>
@@ -70,7 +70,7 @@ function DateTimePickerModal({ open, title, onClose, onSubmit }: { open: boolean
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
       <div className="bg-cream-50 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 pb-10 sm:pb-6 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-display text-xl text-sage-800">{title}</h3>
+          <h3 className="font-bold text-xl text-sage-800">{title}</h3>
           <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
         </div>
         <div className="space-y-4 mb-6">
@@ -337,12 +337,12 @@ export default function DatesPage() {
   ];
 
   if(loading){return(<div className="flex flex-col items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 text-sage-400 animate-spin mb-4"/><p className="text-cream-700">Loading dates...</p></div>);}
-  if(dates.length===0){return(<div className="flex flex-col items-center justify-center min-h-[60vh] text-center"><div className="w-16 h-16 bg-gold-400/20 rounded-2xl flex items-center justify-center mb-4"><Calendar className="w-8 h-8 text-gold-600"/></div><h1 className="font-display text-2xl text-sage-800 mb-2">No dates yet</h1><p className="text-cream-700 max-w-sm">Match with someone and pick a date idea!</p></div>);}
+  if(dates.length===0){return(<div className="flex flex-col items-center justify-center min-h-[60vh] text-center"><div className="w-16 h-16 bg-gold-400/20 rounded-2xl flex items-center justify-center mb-4"><Calendar className="w-8 h-8 text-gold-600"/></div><h1 className="font-bold text-2xl text-sage-800 mb-2">No dates yet</h1><p className="text-cream-700 max-w-sm">Match with someone and pick a date idea!</p></div>);}
 
   return (
     <div>
       <div className="mb-2">
-        <h1 className="font-display text-2xl text-sage-800">My Dates</h1>
+        <h1 className="font-bold text-2xl text-sage-800">My Dates</h1>
         <p className="text-sm text-cream-600 mt-1">{upcoming.length} upcoming · {needsRating.length>0?`${needsRating.length} to rate`:myTurnCount>0?`${myTurnCount} need your response`:`${pending.length} pending`}</p>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">

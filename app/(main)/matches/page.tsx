@@ -77,7 +77,7 @@ export default function MatchesPage() {
       {/* Header */}
       <div className="px-4 pb-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-display text-2xl text-sage-800">Messages</h1>
+          <h1 className="font-bold text-2xl text-sage-800">Messages</h1>
           {unreadCount > 0 && (
             <span className="bg-sage-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
               {unreadCount} new
@@ -163,7 +163,7 @@ export default function MatchesPage() {
           <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4">
             <MessageCircle className="w-8 h-8 text-sage-400" />
           </div>
-          <h2 className="font-display text-xl text-sage-800 mb-2">
+          <h2 className="font-bold text-xl text-sage-800 mb-2">
             {conversations.length === 0 ? 'No messages yet' : 'Nothing here'}
           </h2>
           <p className="text-cream-700 text-sm max-w-xs">

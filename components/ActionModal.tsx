@@ -11,7 +11,7 @@ export function ActionModal({ state, onClose }: { state: ActionModalState; onClo
     return (
       <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-          <h3 className="font-display text-xl text-sage-800 mb-2">{state.title}</h3>
+          <h3 className="font-bold text-xl text-sage-800 mb-2">{state.title}</h3>
           <p className="text-cream-700 text-sm mb-6">{state.message}</p>
           <button onClick={state.onConfirm} className="w-full py-2.5 rounded-xl bg-sage-400 text-white font-medium text-sm">OK</button>
         </div>
@@ -24,7 +24,7 @@ export function ActionModal({ state, onClose }: { state: ActionModalState; onClo
     return (
       <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-          <h3 className="font-display text-xl text-sage-800 mb-2">{state.title}</h3>
+          <h3 className="font-bold text-xl text-sage-800 mb-2">{state.title}</h3>
           <p className="text-cream-700 text-sm mb-6">{state.message}</p>
           <div className="flex gap-3">
             <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-cream-200 text-cream-700 font-medium text-sm">Cancel</button>
@@ -41,7 +41,7 @@ export function ActionModal({ state, onClose }: { state: ActionModalState; onClo
       <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
         <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl">
           <div className="flex items-center justify-between p-5 pb-2">
-            <h3 className="font-display text-xl text-sage-800">{state.title}</h3>
+            <h3 className="font-bold text-xl text-sage-800">{state.title}</h3>
             <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-5 h-5" /></button>
           </div>
           {state.message && <p className="px-5 text-cream-700 text-sm mb-2">{state.message}</p>}

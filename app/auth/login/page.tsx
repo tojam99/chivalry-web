@@ -90,7 +90,7 @@ function LoginForm() {
   return (
     <div>
       <div className="text-center mb-8">
-        <h1 className="font-display text-3xl text-sage-800 mb-2">Welcome back</h1>
+        <h1 className="font-bold text-3xl text-sage-800 mb-2">Welcome back</h1>
         <p className="text-cream-700">Log in to find your next great date</p>
       </div>
 
