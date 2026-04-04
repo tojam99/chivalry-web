@@ -1,34 +1,31 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/useProfile';
 import { createClient } from '@/lib/supabase-browser';
+import PlacePicker from '@/components/PlacePicker';
 import {
   MapPin, Briefcase, GraduationCap, Ruler, Heart, Coffee, Plus, LogOut, X,
-  Camera, Trash2, ChevronRight, Loader2, Check, Zap, Navigation, Edit3,
+  Camera, Trash2, ChevronRight, ChevronLeft, Loader2, Check, Zap, Edit3, Eye,
+  Info, Leaf, Sparkles, Search, ShieldCheck, Star,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
-function resolvePhoto(url: string | null): string {
-  if (!url) return ''; return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`;
-}
+function resolvePhoto(url: string | null): string { if (!url) return ''; return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`; }
 
 const HEIGHT_OPTIONS = ["4'10\"","4'11\"","5'0\"","5'1\"","5'2\"","5'3\"","5'4\"","5'5\"","5'6\"","5'7\"","5'8\"","5'9\"","5'10\"","5'11\"","6'0\"","6'1\"","6'2\"","6'3\"","6'4\"","6'5\"","6'6\"","6'7\"","6'8\""];
 const BODY_OPTIONS = ['Slim', 'Average', 'Athletic', 'Curvy', 'Heavy'];
 const ETHNICITY_OPTIONS = ['Asian', 'Black / African', 'Hispanic / Latino', 'Middle Eastern', 'Native American', 'Pacific Islander', 'White / Caucasian', 'Mixed', 'Other', 'Prefer not to say'];
 const RELIGION_OPTIONS = ['Agnostic', 'Atheist', 'Buddhist', 'Catholic', 'Christian', 'Hindu', 'Jewish', 'Muslim', 'Sikh', 'Spiritual', 'Other', 'Prefer not to say'];
 const DRINKING_OPTIONS = ['Never', 'Socially', 'Often'];
-const SMOKING_OPTIONS = ['Never', 'Socially', 'Often'];
 const WORKOUT_OPTIONS = ['Never', 'Sometimes', 'Often', 'Daily'];
 const CHILDREN_OPTIONS = ["Don't want", 'Someday', 'Have & want more', "Have & don't want more"];
 const LOOKING_FOR_OPTIONS = ['Relationship', 'Something casual', 'Not sure yet', 'New friends'];
 const GENDER_OPTIONS = ['Male', 'Female', 'Non-binary', 'Other'];
 const SHOW_ME_OPTIONS = ['Everyone', 'Women', 'Men'];
 
-function DropdownField({ label, value, options, onChange, icon }: {
-  label: string; value: string; options: string[]; onChange: (v: string) => void; icon?: React.ReactNode;
-}) {
+function DropdownField({ label, value, options, onChange, icon }: { label: string; value: string; options: string[]; onChange: (v: string) => void; icon?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
@@ -42,7 +39,7 @@ function DropdownField({ label, value, options, onChange, icon }: {
         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-cream-300 rounded-xl shadow-lg z-20 max-h-60 overflow-y-auto">
           {options.map((opt) => (
             <button key={opt} onClick={() => { onChange(opt); setOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-cream-100 transition-colors flex items-center justify-between ${value === opt ? 'text-sage-600 font-medium bg-sage-50' : 'text-sage-800'}`}>
+              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-cream-100 flex items-center justify-between ${value === opt ? 'text-sage-600 font-medium bg-sage-50' : 'text-sage-800'}`}>
               {opt}{value === opt && <Check className="w-4 h-4 text-sage-400" />}
             </button>
           ))}
@@ -52,17 +49,12 @@ function DropdownField({ label, value, options, onChange, icon }: {
   );
 }
 
-// Tap-to-edit text field (for profession, education)
-function EditableTextField({ label, value, onChange, maxLength = 30, icon }: {
-  label: string; value: string; onChange: (v: string) => void; maxLength?: number; icon?: React.ReactNode;
-}) {
+function EditableTextField({ label, value, onChange, maxLength = 30, icon }: { label: string; value: string; onChange: (v: string) => void; maxLength?: number; icon?: React.ReactNode }) {
   const [editing, setEditing] = useState(false);
   const [local, setLocal] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => { setLocal(value); }, [value]);
   useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
-
   return editing ? (
     <div className="flex items-center gap-2 px-4 py-2 bg-cream-100 rounded-xl">
       {icon && <span className="text-cream-600 shrink-0">{icon}</span>}
@@ -83,6 +75,83 @@ function EditableTextField({ label, value, onChange, maxLength = 30, icon }: {
   );
 }
 
+// ── Profile Preview Modal ──
+function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
+  profile: any; photos: any[]; interests: string[]; dateIdeas: any[]; onClose: () => void;
+}) {
+  const [photoIdx, setPhotoIdx] = useState(0);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-full flex items-start justify-center py-6 px-4">
+        <div className="bg-cream-50 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
+          <div className="flex items-center justify-between px-5 pt-5">
+            <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
+            <span className="text-xs text-cream-600 font-medium">Profile Preview</span>
+            <div className="w-6" />
+          </div>
+          <div className="relative aspect-[3/4] max-h-[420px] mx-5 mt-3 rounded-2xl overflow-hidden bg-cream-300">
+            {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
+            {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
+            {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
+            {photoIdx < photos.length-1 && (<button onClick={() => setPhotoIdx(photoIdx+1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute bottom-3 left-3 right-3">
+              <div className="flex items-center gap-2"><h2 className="text-white font-display text-2xl">{profile.name}, {profile.age}</h2>{profile.verified && <ShieldCheck className="w-5 h-5 text-green-400" />}</div>
+              {profile.city && <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
+            </div>
+          </div>
+          {profile.available_now && (<div className="mx-5 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
+          <div className="px-5 pb-6 space-y-4 mt-4">
+            {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
+            {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Date Ideas</p></div>
+                {dateIdeas.filter((d: any) => d.title?.trim()).map((idea: any) => (
+                  <div key={idea.id} className="flex items-center gap-3 bg-sage-400 rounded-xl p-3 mb-2">
+                    <div className="flex-1"><p className="text-sm font-bold text-white">{idea.title}</p>{idea.location_name && <p className="text-xs text-white/70">{idea.location_name}</p>}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(profile.identification || profile.profession || profile.education || profile.height || profile.body_type || profile.ethnicity || profile.religion) && (
+              <div>
+                <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
+                <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
+                  {[{l:'Identification',v:profile.identification},{l:'Profession',v:profile.profession},{l:'Education',v:profile.education},{l:'Height',v:profile.height},{l:'Body Type',v:profile.body_type},{l:'Ethnicity',v:profile.ethnicity},{l:'Religion',v:profile.religion}].filter(r=>r.v).map(r=>(
+                    <div key={r.l} className="flex items-center justify-between px-4 py-2.5"><span className="text-sm text-cream-600">{r.l}</span><span className="text-sm font-medium text-sage-800">{r.v}</span></div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(profile.drinking || profile.smoking || profile.workout || profile.children) && (
+              <div>
+                <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
+                <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
+                  {[{l:'Drinking',v:profile.drinking},{l:'Smoking',v:profile.smoking},{l:'Workout',v:profile.workout},{l:'Children',v:profile.children}].filter(r=>r.v).map(r=>(
+                    <div key={r.l} className="flex items-center justify-between px-4 py-2.5"><span className="text-sm text-cream-600">{r.l}</span><span className="text-sm font-medium text-sage-800">{r.v}</span></div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {interests.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
+                <div className="flex flex-wrap gap-1.5">{interests.map((i,idx)=>(<span key={idx} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{i}</span>))}</div>
+              </div>
+            )}
+            {profile.looking_for && (
+              <div>
+                <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
+                <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{profile.looking_for}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { profile, loading, updateField, addDateIdea, deleteDateIdea, toggleInterest, uploadPhoto, deletePhoto, signOut } = useProfile();
   const router = useRouter();
@@ -91,22 +160,23 @@ export default function ProfilePage() {
   const [allInterests, setAllInterests] = useState<string[]>([]);
   const [editingBio, setEditingBio] = useState(false);
   const [localBio, setLocalBio] = useState('');
+  const [showAddIdea, setShowAddIdea] = useState(false);
   const [newIdeaTitle, setNewIdeaTitle] = useState('');
   const [newIdeaLocation, setNewIdeaLocation] = useState('');
-  const [showAddIdea, setShowAddIdea] = useState(false);
+  const [newIdeaLocationFull, setNewIdeaLocationFull] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [locating, setLocating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showIdeaLocationPicker, setShowIdeaLocationPicker] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.from('interests').select('name').order('name').then(({ data }) => {
-      setAllInterests((data || []).map((i) => i.name));
-    });
+    supabase.from('interests').select('name').order('name').then(({ data }) => setAllInterests((data || []).map((i) => i.name)));
   }, []);
 
   useEffect(() => { if (profile) setLocalBio(profile.bio || ''); }, [profile?.bio]);
 
-  // Clean up incomplete date ideas on unmount
+  // Cleanup incomplete date ideas on unmount
   useEffect(() => {
     return () => {
       if (profile?.date_ideas) {
@@ -127,41 +197,9 @@ export default function ProfilePage() {
   }
 
   async function handleAddIdea() {
-    if (!newIdeaTitle.trim()) return;
-    if (!newIdeaLocation.trim()) {
-      alert('Please add a location for your date idea.');
-      return;
-    }
-    await addDateIdea(newIdeaTitle.trim(), newIdeaLocation.trim());
-    setNewIdeaTitle(''); setNewIdeaLocation(''); setShowAddIdea(false);
-  }
-
-  async function handleGetLocation() {
-    if (!navigator.geolocation) { alert('Geolocation not supported by your browser.'); return; }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Reverse geocode using a free API
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
-          const data = await res.json();
-          const city = data.address?.city || data.address?.town || data.address?.village || '';
-          const state = data.address?.state || '';
-          const locationStr = city && state ? `${city}, ${state}` : city || state || 'Unknown location';
-          
-          await updateField('city', locationStr);
-          await updateField('latitude', latitude);
-          await updateField('longitude', longitude);
-        } catch (err) {
-          console.error('Geocoding error:', err);
-          alert('Could not determine your location. Please try again.');
-        }
-        setLocating(false);
-      },
-      (err) => { console.error('Location error:', err); alert('Location access denied. Please enable location in your browser settings.'); setLocating(false); },
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
+    if (!newIdeaTitle.trim() || !newIdeaLocationFull.trim()) return;
+    await addDateIdea(newIdeaTitle.trim(), newIdeaLocationFull.trim());
+    setNewIdeaTitle(''); setNewIdeaLocation(''); setNewIdeaLocationFull(''); setShowAddIdea(false);
   }
 
   async function handleSignOut() { await signOut(); router.push('/'); router.refresh(); }
@@ -175,12 +213,17 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl text-sage-800">Profile</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-cream-600">Available Now</span>
-          <button onClick={() => updateField('available_now', !profile.available_now)}
-            className={`w-10 h-6 rounded-full transition-colors relative ${profile.available_now ? 'bg-green-500' : 'bg-cream-300'}`}>
-            <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${profile.available_now ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+        <div className="flex items-center gap-3">
+          <button onClick={() => setShowPreview(true)} className="flex items-center gap-1 text-xs font-medium text-sage-400 hover:text-sage-600 bg-cream-200 px-2.5 py-1.5 rounded-lg hover:bg-cream-300">
+            <Eye className="w-3.5 h-3.5" />Preview
           </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-cream-600">Available</span>
+            <button onClick={() => updateField('available_now', !profile.available_now)}
+              className={`w-10 h-6 rounded-full transition-colors relative ${profile.available_now ? 'bg-green-500' : 'bg-cream-300'}`}>
+              <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${profile.available_now ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -203,18 +246,14 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Name & Location */}
+      {/* Name & Location with Google Places picker */}
       <div>
         <h2 className="font-display text-xl text-sage-800">{profile.name}, {profile.age}</h2>
-        <div className="flex items-center gap-2 mt-1">
-          <MapPin className="w-3.5 h-3.5 text-cream-600" />
-          <span className="text-cream-700 text-sm">{profile.city || 'No location set'}</span>
-          <button onClick={handleGetLocation} disabled={locating}
-            className="ml-auto flex items-center gap-1 text-xs font-medium text-sage-400 hover:text-sage-600 bg-cream-200 px-2.5 py-1 rounded-lg hover:bg-cream-300 transition-colors disabled:opacity-50">
-            {locating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
-            {locating ? 'Finding...' : 'Update Location'}
-          </button>
-        </div>
+        <button onClick={() => setShowCityPicker(true)} className="flex items-center gap-2 mt-1 hover:bg-cream-100 rounded-lg px-2 py-1 -mx-2 transition-colors">
+          <MapPin className="w-3.5 h-3.5 text-sage-400" />
+          <span className="text-cream-700 text-sm">{profile.city || 'Tap to set location'}</span>
+          <Edit3 className="w-3 h-3 text-cream-500" />
+        </button>
       </div>
 
       {/* Bio */}
@@ -239,7 +278,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Basic Info — tap to edit profession/education, dropdowns for rest */}
+      {/* Basic Info */}
       <div>
         <label className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2 block">Basic info</label>
         <div className="space-y-1">
@@ -258,7 +297,7 @@ export default function ProfilePage() {
         <label className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2 block">Lifestyle</label>
         <div className="space-y-1">
           <DropdownField label="Drinking" value={profile.drinking} options={DRINKING_OPTIONS} onChange={(v) => updateField('drinking', v)} />
-          <DropdownField label="Smoking" value={profile.smoking} options={SMOKING_OPTIONS} onChange={(v) => updateField('smoking', v)} />
+          <DropdownField label="Smoking" value={profile.smoking} options={DRINKING_OPTIONS} onChange={(v) => updateField('smoking', v)} />
           <DropdownField label="Weed" value={profile.weed} options={DRINKING_OPTIONS} onChange={(v) => updateField('weed', v)} />
           <DropdownField label="Workout" value={profile.workout} options={WORKOUT_OPTIONS} onChange={(v) => updateField('workout', v)} />
           <DropdownField label="Children" value={profile.children} options={CHILDREN_OPTIONS} onChange={(v) => updateField('children', v)} />
@@ -282,23 +321,20 @@ export default function ProfilePage() {
       <div>
         <label className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2 block">Interests ({profile.interests.length}/10)</label>
         <div className="flex flex-wrap gap-1.5">
-          {allInterests.map((interest) => {
-            const selected = profile.interests.includes(interest);
-            return (
-              <button key={interest} onClick={() => toggleInterest(interest)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${selected ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
-                {interest}
-              </button>
-            );
-          })}
+          {allInterests.map((interest) => (
+            <button key={interest} onClick={() => toggleInterest(interest)}
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${profile.interests.includes(interest) ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
+              {interest}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Date Ideas */}
+      {/* Date Ideas with Google Places picker */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="text-xs font-medium text-cream-600 uppercase tracking-wide">My date ideas</label>
-          {profile.date_ideas.length < 3 && (
+          {profile.date_ideas.length < 3 && !showAddIdea && (
             <button onClick={() => setShowAddIdea(true)} className="text-xs font-medium text-sage-400 hover:text-sage-600 flex items-center gap-1"><Plus className="w-3 h-3" />Add</button>
           )}
         </div>
@@ -308,8 +344,7 @@ export default function ProfilePage() {
               <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0"><Coffee className="w-4 h-4 text-gold-600" /></div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sage-800 truncate">{idea.title || '(No title)'}</p>
-                {idea.location_name && <p className="text-xs text-cream-600 truncate">{idea.location_name}</p>}
-                {!idea.location_name && <p className="text-xs text-red-400">Missing location — will be deleted</p>}
+                {idea.location_name ? <p className="text-xs text-cream-600 truncate">{idea.location_name}</p> : <p className="text-xs text-red-400">Missing location</p>}
               </div>
               <button onClick={() => deleteDateIdea(idea.id)} className="text-cream-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
             </div>
@@ -319,12 +354,17 @@ export default function ProfilePage() {
           <div className="mt-2 bg-cream-100 rounded-xl p-3 space-y-2">
             <input value={newIdeaTitle} onChange={(e) => setNewIdeaTitle(e.target.value)} placeholder="Date idea title *" maxLength={50}
               className="w-full bg-white border border-cream-300 rounded-lg px-3 py-2 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30" />
-            <input value={newIdeaLocation} onChange={(e) => setNewIdeaLocation(e.target.value)} placeholder="Location *" maxLength={100}
-              className="w-full bg-white border border-cream-300 rounded-lg px-3 py-2 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30" />
+            <button onClick={() => setShowIdeaLocationPicker(true)}
+              className="w-full flex items-center gap-2 bg-white border border-cream-300 rounded-lg px-3 py-2 text-left hover:bg-cream-50 transition-colors">
+              <MapPin className="w-4 h-4 text-cream-500" />
+              <span className={`text-sm flex-1 ${newIdeaLocationFull ? 'text-sage-800' : 'text-cream-500'}`}>
+                {newIdeaLocationFull || 'Search for a location *'}
+              </span>
+            </button>
             <p className="text-[10px] text-cream-500">Both title and location are required</p>
             <div className="flex gap-2">
-              <button onClick={() => { setShowAddIdea(false); setNewIdeaTitle(''); setNewIdeaLocation(''); }} className="text-xs text-cream-600 px-3 py-1.5">Cancel</button>
-              <button onClick={handleAddIdea} disabled={!newIdeaTitle.trim() || !newIdeaLocation.trim()}
+              <button onClick={() => { setShowAddIdea(false); setNewIdeaTitle(''); setNewIdeaLocation(''); setNewIdeaLocationFull(''); }} className="text-xs text-cream-600 px-3 py-1.5">Cancel</button>
+              <button onClick={handleAddIdea} disabled={!newIdeaTitle.trim() || !newIdeaLocationFull.trim()}
                 className="text-xs bg-sage-400 text-white px-3 py-1.5 rounded-lg disabled:opacity-40">Add</button>
             </div>
           </div>
@@ -350,23 +390,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Support & General */}
+      {/* Support links */}
       <div className="border-t border-cream-200 pt-6 space-y-1">
-        <a href="/support" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="text-sm font-medium text-sage-800">Support</span><ChevronRight className="w-4 h-4 text-cream-500" />
-        </a>
-        <a href="/privacy" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="text-sm font-medium text-sage-800">Privacy Policy</span><ChevronRight className="w-4 h-4 text-cream-500" />
-        </a>
-        <a href="/terms" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="text-sm font-medium text-sage-800">Terms of Service</span><ChevronRight className="w-4 h-4 text-cream-500" />
-        </a>
-        <a href="/safety" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="text-sm font-medium text-sage-800">Safety</span><ChevronRight className="w-4 h-4 text-cream-500" />
-        </a>
-        <a href="/delete" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="text-sm font-medium text-red-400">Delete Account</span><ChevronRight className="w-4 h-4 text-cream-500" />
-        </a>
+        {[{href:'/support',label:'Support'},{href:'/privacy',label:'Privacy Policy'},{href:'/terms',label:'Terms of Service'},{href:'/safety',label:'Safety'}].map((link)=>(
+          <a key={link.href} href={link.href} className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors"><span className="text-sm font-medium text-sage-800">{link.label}</span><ChevronRight className="w-4 h-4 text-cream-500" /></a>
+        ))}
+        <a href="/delete" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors"><span className="text-sm font-medium text-red-400">Delete Account</span><ChevronRight className="w-4 h-4 text-cream-500" /></a>
       </div>
 
       {/* Sign Out */}
@@ -376,6 +405,19 @@ export default function ProfilePage() {
           <ChevronRight className="w-4 h-4 text-cream-500" />
         </button>
       </div>
+
+      {/* City Picker */}
+      <PlacePicker open={showCityPicker} onClose={() => setShowCityPicker(false)} title="Search City"
+        placeholder="Search for your city..." cityOnly={true}
+        onSelect={(place) => { updateField('city', place.name + (place.address.includes(',') ? ', ' + place.address.split(',').slice(-2, -1)[0].trim() : '')); updateField('latitude', place.lat); updateField('longitude', place.lng); }} />
+
+      {/* Date Idea Location Picker */}
+      <PlacePicker open={showIdeaLocationPicker} onClose={() => setShowIdeaLocationPicker(false)} title="Search Location"
+        placeholder="Search for a venue..."
+        onSelect={(place) => { setNewIdeaLocation(place.name); setNewIdeaLocationFull(`${place.name} · ${place.address}`); }} />
+
+      {/* Profile Preview */}
+      {showPreview && <ProfilePreview profile={profile} photos={profile.photos} interests={profile.interests} dateIdeas={profile.date_ideas} onClose={() => setShowPreview(false)} />}
     </div>
   );
 }
