@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { X, Users, ShieldCheck, Sparkles, Zap, Heart } from 'lucide-react';
 import type { DiscoverFilters } from '@/lib/useDiscover';
 
 interface Props {
@@ -122,6 +122,17 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
                   <div>
                     <p className="text-sm font-semibold text-sage-800">Shared interests</p>
                     <p className="text-[11px] text-cream-600">Prioritize similar interests</p>
+                  </div>
+                </div>
+                <span className="text-cream-500 text-xs">🔒</span>
+              </div>
+              <div className="h-px bg-cream-300 mx-4" />
+              <div className="flex items-center justify-between px-4 py-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Heart className="w-5 h-5 text-sage-400" /></div>
+                  <div>
+                    <p className="text-sm font-semibold text-sage-800">Looking for</p>
+                    <p className="text-[11px] text-cream-600">Match by relationship goals</p>
                   </div>
                 </div>
                 <span className="text-cream-500 text-xs">🔒</span>

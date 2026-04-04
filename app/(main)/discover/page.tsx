@@ -9,7 +9,7 @@ import FilterModal from '@/components/FilterModal';
 import {
   Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
   Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
-  SlidersHorizontal, Send, Undo2, Maximize2,
+  SlidersHorizontal, Send, Undo2, Maximize2, Zap,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -262,9 +262,9 @@ export default function DiscoverPage() {
         {preloadUrls.map((url) => (<img key={url} src={url} alt="" />))}
       </div>
 
-      {/* Desktop filter button — hidden on mobile since it's in the header */}
-      <div className="hidden md:flex justify-end mb-3">
-        <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
+      {/* Desktop filter button — full width, hidden on mobile */}
+      <div className="hidden md:block mb-3">
+        <button onClick={() => setShowFilters(true)} className="w-full flex items-center justify-center gap-2 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-4 py-2.5 rounded-xl hover:bg-cream-300 transition-colors">
           <SlidersHorizontal className="w-4 h-4" />Filters
         </button>
       </div>
@@ -293,19 +293,22 @@ export default function DiscoverPage() {
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div className="flex-1 min-w-0">
+                {/* Available Now — above the name like mobile app */}
+                {currentProfile.available_now && (
+                  <div className="mb-1.5">
+                    <span className="bg-green-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide inline-flex items-center gap-1">
+                      <Zap className="w-3 h-3" />Available Now
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-white font-bold text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
-                  {currentProfile.available_now && (
-                    <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Available Now</span>
-                  )}
                 </div>
-                {/* Profession · Education line */}
                 {(currentProfile.profession || currentProfile.education) && (
                   <p className="text-white/80 text-sm mt-0.5">
                     {[currentProfile.profession, currentProfile.education].filter(Boolean).join(' · ')}
                   </p>
                 )}
-                {/* Rating stars (if rating data exists) */}
                 {(currentProfile as any).avg_rating > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -314,7 +317,6 @@ export default function DiscoverPage() {
                     <span className="text-white/70 text-xs ml-0.5">{(currentProfile as any).avg_rating} ({(currentProfile as any).total_dates || 0} dates)</span>
                   </div>
                 )}
-                {/* City */}
                 {currentProfile.city && (
                   <div className="flex items-center gap-1.5 text-white/70 text-sm mt-1">
                     <MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span>
