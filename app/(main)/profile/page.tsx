@@ -90,12 +90,12 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
             <span className="text-xs text-cream-600 font-medium">Profile Preview</span>
             <div className="w-6" />
           </div>
-          <div className="relative aspect-[3/4] max-h-[420px] mx-5 mt-3 rounded-2xl overflow-hidden bg-cream-300">
+          <div className="relative aspect-[3/4] max-h-[480px] mx-4 mt-3 rounded-2xl overflow-hidden bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
             {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
             {photoIdx < photos.length-1 && (<button onClick={() => setPhotoIdx(photoIdx+1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
             <div className="absolute bottom-3 left-3 right-3">
               <div className="flex items-center gap-2"><h2 className="text-white font-bold text-2xl">{profile.name}, {profile.age}</h2>{profile.verified && <ShieldCheck className="w-5 h-5 text-green-400" />}</div>
               {(profile.profession || profile.education) && (
@@ -104,7 +104,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
               {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
             </div>
           </div>
-          {profile.available_now && (<div className="mx-5 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
+          {profile.available_now && (<div className="mx-4 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
           <div className="px-5 pb-6 space-y-4 mt-4">
             {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
             {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
@@ -381,13 +381,16 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Bio */}
+      {/* About Me */}
       <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">About me</label>
+        <div className="flex items-center gap-2 mb-3">
+          <User className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">About Me</h3>
+        </div>
         {editingBio ? (
-          <div>
+          <div className="bg-cream-100 rounded-2xl p-4">
             <textarea value={localBio} onChange={(e) => setLocalBio(e.target.value)} rows={3} maxLength={500}
-              className="w-full bg-cream-100 border border-cream-300 rounded-xl px-4 py-3 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 resize-none" />
+              className="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 resize-none" />
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-cream-500">{localBio.length}/500</span>
               <div className="flex gap-2">
@@ -397,84 +400,41 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <p onClick={() => setEditingBio(true)} className="text-sage-800 text-[15px] leading-relaxed cursor-pointer hover:bg-cream-100 rounded-xl px-3 py-2 -mx-3 transition-colors">
-            {profile.bio || 'Tap to add a bio...'}
-          </p>
+          <div onClick={() => setEditingBio(true)} className="bg-cream-100 rounded-2xl px-4 py-3 cursor-pointer hover:bg-cream-200 transition-colors">
+            <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio || 'Tap to add a bio...'}</p>
+            <p className="text-xs text-cream-500 mt-1">Tap to edit</p>
+          </div>
         )}
       </div>
 
-      {/* Basic Info */}
+      {/* Date Ideas (moved up, right after About Me like mobile app) */}
       <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Basic info</label>
-        <div className="space-y-1">
-          <DropdownField label="Identification" value={profile.identification} options={GENDER_OPTIONS} onChange={(v) => updateField('identification', v)} />
-          <EditableTextField label="Profession" value={profile.profession} onChange={(v) => updateField('profession', v)} maxLength={20} icon={<Briefcase className="w-4 h-4" />} />
-          <EditableTextField label="Education" value={profile.education} onChange={(v) => updateField('education', v)} maxLength={20} icon={<GraduationCap className="w-4 h-4" />} />
-          <DropdownField label="Height" value={profile.height} options={HEIGHT_OPTIONS} onChange={(v) => updateField('height', v)} icon={<Ruler className="w-4 h-4" />} />
-          <DropdownField label="Body Type" value={profile.body_type} options={BODY_OPTIONS} onChange={(v) => updateField('body_type', v)} />
-          <DropdownField label="Ethnicity" value={profile.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => updateField('ethnicity', v)} />
-          <DropdownField label="Religion" value={profile.religion} options={RELIGION_OPTIONS} onChange={(v) => updateField('religion', v)} />
-        </div>
-      </div>
-
-      {/* Lifestyle */}
-      <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Lifestyle</label>
-        <div className="space-y-1">
-          <DropdownField label="Drinking" value={profile.drinking} options={DRINKING_OPTIONS} onChange={(v) => updateField('drinking', v)} />
-          <DropdownField label="Smoking" value={profile.smoking} options={DRINKING_OPTIONS} onChange={(v) => updateField('smoking', v)} />
-          <DropdownField label="Weed" value={profile.weed} options={DRINKING_OPTIONS} onChange={(v) => updateField('weed', v)} />
-          <DropdownField label="Workout" value={profile.workout} options={WORKOUT_OPTIONS} onChange={(v) => updateField('workout', v)} />
-          <DropdownField label="Children" value={profile.children} options={CHILDREN_OPTIONS} onChange={(v) => updateField('children', v)} />
-        </div>
-      </div>
-
-      {/* Looking For */}
-      <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Looking for</label>
-        <div className="flex flex-wrap gap-2">
-          {LOOKING_FOR_OPTIONS.map((opt) => (
-            <button key={opt} onClick={() => updateField('looking_for', opt)}
-              className={`text-sm px-4 py-2 rounded-xl transition-colors ${profile.looking_for === opt ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Interests */}
-      <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Interests ({profile.interests.length}/10)</label>
-        <div className="flex flex-wrap gap-1.5">
-          {allInterests.map((interest) => (
-            <button key={interest} onClick={() => toggleInterest(interest)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${profile.interests.includes(interest) ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
-              {interest}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Date Ideas with Google Places picker */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-bold text-cream-600 uppercase tracking-wide">My date ideas</label>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-sage-400" />
+            <h3 className="text-base font-bold text-sage-800">Request a Date</h3>
+          </div>
           {profile.date_ideas.length < 3 && !showAddIdea && (
             <button onClick={() => setShowAddIdea(true)} className="text-xs font-medium text-sage-400 hover:text-sage-600 flex items-center gap-1"><Plus className="w-3 h-3" />Add</button>
           )}
         </div>
+        <p className="text-xs text-cream-600 -mt-1 mb-3">Suggest 3 dates — your matches pick one!</p>
         <div className="space-y-2">
           {profile.date_ideas.map((idea) => (
-            <div key={idea.id} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3 group">
-              <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0"><Coffee className="w-4 h-4 text-gold-600" /></div>
+            <div key={idea.id} className="flex items-center gap-3 bg-sage-400 rounded-xl p-3 group">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sage-800 truncate">{idea.title || '(No title)'}</p>
-                {idea.location_name ? <p className="text-xs text-cream-600 truncate">{idea.location_name}</p> : <p className="text-xs text-red-400">Missing location</p>}
+                <p className="text-sm font-bold text-white">{idea.title || '(No title)'}</p>
+                {idea.location_name && <p className="text-xs text-white/70">{idea.location_name}</p>}
               </div>
-              <button onClick={() => deleteDateIdea(idea.id)} className="text-cream-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={() => deleteDateIdea(idea.id)} className="text-white/50 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
             </div>
           ))}
         </div>
+        {profile.date_ideas.length < 3 && !showAddIdea && (
+          <button onClick={() => setShowAddIdea(true)} className="w-full mt-2 flex items-center justify-center gap-2 bg-cream-100 border-2 border-dashed border-cream-300 rounded-xl py-3 text-sm text-cream-600 hover:border-sage-300 hover:text-sage-600 transition-colors">
+            <Plus className="w-4 h-4" />Add date idea
+          </button>
+        )}
         {showAddIdea && (
           <div className="mt-2 bg-cream-100 rounded-xl p-3 space-y-2">
             <input value={newIdeaTitle} onChange={(e) => setNewIdeaTitle(e.target.value)} placeholder="Date idea title *" maxLength={50}
@@ -494,6 +454,76 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Basic Info */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Info className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Basic Info</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          <DropdownField label="Identification" value={profile.identification} options={GENDER_OPTIONS} onChange={(v) => updateField('identification', v)} />
+          <EditableTextField label="Profession" value={profile.profession} onChange={(v) => updateField('profession', v)} maxLength={25} icon={<Briefcase className="w-4 h-4" />} />
+          <EditableTextField label="Education" value={profile.education} onChange={(v) => updateField('education', v)} maxLength={25} icon={<GraduationCap className="w-4 h-4" />} />
+          <DropdownField label="Height" value={profile.height} options={HEIGHT_OPTIONS} onChange={(v) => updateField('height', v)} icon={<Ruler className="w-4 h-4" />} />
+          <DropdownField label="Body Type" value={profile.body_type} options={BODY_OPTIONS} onChange={(v) => updateField('body_type', v)} />
+          <DropdownField label="Ethnicity" value={profile.ethnicity} options={ETHNICITY_OPTIONS} onChange={(v) => updateField('ethnicity', v)} />
+          <DropdownField label="Religion" value={profile.religion} options={RELIGION_OPTIONS} onChange={(v) => updateField('religion', v)} />
+        </div>
+      </div>
+
+      {/* Lifestyle */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Leaf className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Lifestyle Info</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          <DropdownField label="Drinking" value={profile.drinking} options={DRINKING_OPTIONS} onChange={(v) => updateField('drinking', v)} />
+          <DropdownField label="Smoking" value={profile.smoking} options={DRINKING_OPTIONS} onChange={(v) => updateField('smoking', v)} />
+          <DropdownField label="Weed" value={profile.weed} options={DRINKING_OPTIONS} onChange={(v) => updateField('weed', v)} />
+          <DropdownField label="Workout" value={profile.workout} options={WORKOUT_OPTIONS} onChange={(v) => updateField('workout', v)} />
+          <DropdownField label="Children" value={profile.children} options={CHILDREN_OPTIONS} onChange={(v) => updateField('children', v)} />
+        </div>
+      </div>
+
+      {/* Looking For */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Search className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Looking For</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          {LOOKING_FOR_OPTIONS.map((opt) => (
+            <button key={opt} onClick={() => updateField('looking_for', opt)}
+              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-cream-200 transition-colors">
+              <span className="text-sm text-sage-800">{opt}</span>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                profile.looking_for === opt ? 'border-sage-400 bg-sage-400' : 'border-cream-400'
+              }`}>
+                {profile.looking_for === opt && <Check className="w-3 h-3 text-white" />}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Interests */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Interests</h3>
+        </div>
+        <p className="text-xs text-cream-600 -mt-1 mb-3">Pick up to 10 ({profile.interests.length}/10)</p>
+        <div className="flex flex-wrap gap-2">
+          {allInterests.map((interest) => (
+            <button key={interest} onClick={() => toggleInterest(interest)}
+              className={`text-sm px-3.5 py-2 rounded-xl transition-colors ${profile.interests.includes(interest) ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
+              {interest}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══════════════ Verification ══════════════ */}
