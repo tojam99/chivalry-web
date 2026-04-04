@@ -285,43 +285,63 @@ export default function DiscoverPage() {
             className="absolute top-3 right-3 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors">
             <Maximize2 className="w-4 h-4" />
           </button>
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-white font-bold text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
                   {currentProfile.available_now && (
                     <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Available Now</span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 text-white/80 text-sm mt-1">
-                  {currentProfile.city && (<><MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span></>)}
-                </div>
+                {/* Profession · Education line */}
+                {(currentProfile.profession || currentProfile.education) && (
+                  <p className="text-white/80 text-sm mt-0.5">
+                    {[currentProfile.profession, currentProfile.education].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+                {/* Rating stars (if rating data exists) */}
+                {(currentProfile as any).avg_rating > 0 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={`text-sm ${i < Math.round((currentProfile as any).avg_rating) ? 'text-gold-400' : 'text-white/30'}`}>★</span>
+                    ))}
+                    <span className="text-white/70 text-xs ml-0.5">{(currentProfile as any).avg_rating} ({(currentProfile as any).total_dates || 0} dates)</span>
+                  </div>
+                )}
+                {/* City */}
+                {currentProfile.city && (
+                  <div className="flex items-center gap-1.5 text-white/70 text-sm mt-1">
+                    <MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span>
+                  </div>
+                )}
               </div>
-              {currentProfile.verified && <div className="bg-sage-400 text-white text-xs font-medium px-2.5 py-1 rounded-lg">Verified</div>}
+              <div className="flex flex-col items-end gap-1.5 shrink-0 ml-3">
+                {currentProfile.verified && <div className="bg-sage-400 text-white text-xs font-medium px-2.5 py-1 rounded-lg">Verified</div>}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Action buttons — centered: Rewind / Pass / Like */}
+      {/* Action buttons — Pass / Rewind / Like (rewind in middle, matching mobile app) */}
       <div className="flex items-center justify-center gap-5 py-5">
-        {/* Rewind */}
-        <button onClick={handleRewind} disabled={!lastSwiped || animating}
-          className="w-12 h-12 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-md hover:border-amber-300 hover:shadow-lg transition-all active:scale-90 disabled:opacity-30 disabled:hover:border-cream-300 disabled:hover:shadow-md"
-          title="Undo last swipe">
-          <Undo2 className="w-5 h-5 text-amber-400" />
-        </button>
         {/* Pass */}
         <button onClick={() => handleSwipe('left')} disabled={animating}
-          className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-300 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
+          className="w-14 h-14 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-300 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
           <X className="w-7 h-7 text-red-400" />
+        </button>
+        {/* Rewind (center) */}
+        <button onClick={handleRewind} disabled={!lastSwiped || animating}
+          className="w-12 h-12 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-md hover:border-sage-300 hover:shadow-lg transition-all active:scale-90 disabled:opacity-30 disabled:hover:border-cream-300 disabled:hover:shadow-md"
+          title="Undo last swipe">
+          <Undo2 className="w-5 h-5 text-sage-400" />
         </button>
         {/* Like */}
         <button onClick={() => handleSwipe('right')} disabled={animating}
-          className="w-16 h-16 bg-sage-400 rounded-full flex items-center justify-center shadow-lg hover:bg-sage-500 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
-          <Heart className="w-8 h-8 text-white" fill="white" />
+          className="w-14 h-14 bg-sage-400 rounded-full flex items-center justify-center shadow-lg hover:bg-sage-500 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
+          <Heart className="w-7 h-7 text-white" fill="white" />
         </button>
       </div>
       {/* <p className="text-center text-xs text-cream-500 -mt-2 mb-5">{remaining} {remaining === 1 ? 'person' : 'people'} left</p> */}
