@@ -1,194 +1,76 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
-import { createClient } from '@/lib/supabase-browser';
-import FilterModal from '@/components/FilterModal';
+import { useProfile } from '@/lib/useProfile';
+import { useDiscover, type DiscoverProfile } from '@/lib/useDiscover';
 import {
-  Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
-  Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
-  SlidersHorizontal, Send,
+  Heart,
+  X,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Ruler,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  MessageCircle,
+  Coffee,
+  Compass,
+  Loader2,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
-function resolvePhoto(url: string): string {
-  if (!url) return '';
-  return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`;
-}
 
 export default function DiscoverPage() {
-  const supabase = createClient();
-  const [filters, setFilters] = useState<DiscoverFilters>({ showMe: 'Everyone', ageMin: 18, ageMax: 99, maxDistance: 100, verifiedOnly: false, sharedInterests: false });
-  const [showFilters, setShowFilters] = useState(false);
-  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh, myProfileId } = useDiscover(filters);
+  const { profile: myProfile, loading: profileLoading } = useProfile();
+  const { profiles, loading, myProfileId, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
   const router = useRouter();
 
-  const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const [swiping, setSwiping] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
 
-  // Date request state
-  const [dateCredits, setDateCredits] = useState(0);
-  const [isPremium, setIsPremium] = useState(false);
-  const [confirmRequest, setConfirmRequest] = useState<{
-    visible: boolean;
-    idea: { id: string; title: string; location_name: string } | null;
-    profileId: string | null;
-    profileName: string | null;
-  }>({ visible: false, idea: null, profileId: null, profileName: null });
-  const [noCreditsModal, setNoCreditsModal] = useState(false);
-  const [successAlert, setSuccessAlert] = useState<string | null>(null);
+  const currentProfile = profiles[currentIndex] || null;
+  const remaining = profiles.length - currentIndex;
 
-  // Fetch credits
+  // Reset photo index when profile changes
   useEffect(() => {
-    async function fetchCredits() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase.from('profiles').select('date_request_credits, premium').eq('auth_id', user.id).single();
-      if (data) {
-        setDateCredits(data.date_request_credits || 0);
-        setIsPremium(data.premium || false);
-      }
-    }
-    fetchCredits();
-  }, [confirmRequest.visible]);
+    setPhotoIndex(0);
+  }, [currentIndex]);
 
-  const visibleProfiles = profiles.filter((p) => !swipedIds.has(p.id));
-  const currentProfile = visibleProfiles[0] || null;
-  const remaining = visibleProfiles.length;
-
-  const preloadUrls = useMemo(() => {
-    const urls: string[] = [];
-    visibleProfiles.slice(0, 5).forEach((p) => {
-      p.photos.forEach((photo) => { urls.push(resolvePhoto(photo.photo_url)); });
-    });
-    return urls;
-  }, [visibleProfiles.map((p) => p.id).slice(0, 5).join(',')]);
-
-  const prevId = useRef<string | null>(null);
+  // Reset index when profiles list changes
   useEffect(() => {
-    if (currentProfile && currentProfile.id !== prevId.current) {
-      prevId.current = currentProfile.id;
-      setPhotoIndex(0);
-    }
-  }, [currentProfile]);
+    setCurrentIndex(0);
+  }, [profiles]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (matchAlert || animating || confirmRequest.visible) return;
+      if (matchAlert) return;
       if (e.key === 'ArrowLeft') handleSwipe('left');
       if (e.key === 'ArrowRight') handleSwipe('right');
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [matchAlert, animating, currentProfile, confirmRequest.visible]);
+  }, [matchAlert, swiping, currentProfile]);
 
   const handleSwipe = useCallback(
-    (direction: 'left' | 'right') => {
-      if (animating || !currentProfile) return;
-      setAnimating(true);
-      const profileId = currentProfile.id;
-      setSwipedIds((prev) => new Set(prev).add(profileId));
-      recordSwipe(profileId, direction);
-      setTimeout(() => setAnimating(false), 200);
+    async (direction: 'left' | 'right') => {
+      if (swiping || !currentProfile) return;
+      setSwiping(true);
+      setSwipeDirection(direction);
+      await new Promise((r) => setTimeout(r, 300));
+      await recordSwipe(currentProfile.id, direction);
+      setSwipeDirection(null);
+      setSwiping(false);
+      setCurrentIndex((prev) => prev + 1);
     },
-    [animating, currentProfile, recordSwipe]
+    [swiping, currentProfile, recordSwipe]
   );
 
-  // Date request handlers
-  function handleDateRequest(idea: { id: string; title: string; location_name: string }) {
-    if (!currentProfile) return;
-    if (dateCredits > 0 || isPremium) {
-      setConfirmRequest({ visible: true, idea, profileId: currentProfile.id, profileName: currentProfile.name });
-    } else {
-      setNoCreditsModal(true);
-    }
-  }
-
-  async function confirmDateRequestAction() {
-    if (!confirmRequest.idea || !confirmRequest.profileId || !myProfileId) return;
-    try {
-      // Find or create match
-      const { data: matchData } = await supabase
-        .from('matches')
-        .select('id')
-        .or(`and(user1_id.eq.${myProfileId},user2_id.eq.${confirmRequest.profileId}),and(user1_id.eq.${confirmRequest.profileId},user2_id.eq.${myProfileId})`)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      let matchId = matchData?.id;
-
-      if (!matchId) {
-        // Also record swipe right so they show as liked
-        await supabase.from('swipes').upsert(
-          { swiper_id: myProfileId, swiped_id: confirmRequest.profileId, direction: 'right' },
-          { onConflict: 'swiper_id,swiped_id' }
-        );
-
-        const { data: newMatch, error: matchError } = await supabase
-          .from('matches')
-          .insert({ user1_id: myProfileId, user2_id: confirmRequest.profileId, status: 'active' })
-          .select('id')
-          .single();
-        if (matchError) throw matchError;
-        matchId = newMatch.id;
-      }
-
-      // Check for existing active date
-      const { data: existingDates } = await supabase
-        .from('dates')
-        .select('id')
-        .eq('match_id', matchId)
-        .in('status', ['pending_pick', 'pending_accept', 'pending_time', 'pending_confirm', 'confirmed']);
-
-      if (existingDates && existingDates.length > 0) {
-        setConfirmRequest({ visible: false, idea: null, profileId: null, profileName: null });
-        setSuccessAlert('There is already an active date with this person.');
-        setTimeout(() => setSuccessAlert(null), 3000);
-        return;
-      }
-
-      // Deduct credit
-      if (dateCredits > 0 && !isPremium) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.rpc('use_date_request_credit', { user_auth_id: user.id });
-          setDateCredits((prev) => prev - 1);
-        }
-      }
-
-      // Create date
-      await supabase.from('dates').insert({
-        match_id: matchId,
-        title: confirmRequest.idea.title,
-        location_name: confirmRequest.idea.location_name,
-        status: 'pending_accept',
-        proposed_by: myProfileId,
-        proposed_by_name: 'You',
-        waiting_on: confirmRequest.profileId,
-      });
-
-      const ideaTitle = confirmRequest.idea.title;
-      const otherName = confirmRequest.profileName;
-      setConfirmRequest({ visible: false, idea: null, profileId: null, profileName: null });
-
-      // Remove from visible list
-      if (confirmRequest.profileId) {
-        setSwipedIds((prev) => new Set(prev).add(confirmRequest.profileId!));
-      }
-
-      setSuccessAlert(`Date request for "${ideaTitle}" sent to ${otherName}!`);
-      setTimeout(() => setSuccessAlert(null), 4000);
-    } catch (err: any) {
-      console.error('Date request error:', err);
-      setConfirmRequest({ visible: false, idea: null, profileId: null, profileName: null });
-      setSuccessAlert('Failed to send date request. Please try again.');
-      setTimeout(() => setSuccessAlert(null), 3000);
-    }
-  }
-
-  if (loading) {
+  if (profileLoading || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 text-sage-400 animate-spin mb-4" />
@@ -197,70 +79,82 @@ export default function DiscoverPage() {
     );
   }
 
+  if (!myProfile?.onboarded) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4">
+          <Compass className="w-8 h-8 text-sage-400" />
+        </div>
+        <h1 className="font-display text-2xl text-sage-800 mb-2">Complete your profile</h1>
+        <p className="text-cream-700 max-w-sm mb-6">
+          You need to finish setting up your profile before you can start discovering people.
+        </p>
+      </div>
+    );
+  }
+
   if (!currentProfile) {
     return (
-      <div>
-        <div className="flex justify-end mb-3">
-          <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
-            <SlidersHorizontal className="w-4 h-4" />Filters
-          </button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div className="w-16 h-16 bg-cream-300 rounded-2xl flex items-center justify-center mb-4">
+          <Compass className="w-8 h-8 text-cream-600" />
         </div>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <div className="w-16 h-16 bg-cream-300 rounded-2xl flex items-center justify-center mb-4">
-            <Compass className="w-8 h-8 text-cream-600" />
-          </div>
-          <h1 className="font-display text-2xl text-sage-800 mb-2">No more profiles</h1>
-          <p className="text-cream-700 max-w-sm mb-6">Try adjusting your filters or check back later!</p>
-          <button onClick={() => { setSwipedIds(new Set()); refresh(); }} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">Refresh</button>
-        </div>
-        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} />
+        <h1 className="font-display text-2xl text-sage-800 mb-2">No more profiles</h1>
+        <p className="text-cream-700 max-w-sm mb-6">
+          You&apos;ve seen everyone nearby. Check back later for new people!
+        </p>
+        <button onClick={refresh} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">
+          Refresh
+        </button>
       </div>
     );
   }
 
   const photos = currentProfile.photos;
   const currentPhoto = photos[photoIndex];
-  const photoUrl = resolvePhoto(currentPhoto?.photo_url || '');
+  const photoUrl = currentPhoto?.photo_url?.startsWith('http')
+    ? currentPhoto.photo_url
+    : `${SUPABASE_STORAGE}${currentPhoto?.photo_url}`;
 
   return (
     <>
-      {/* Hidden preloader */}
-      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }} aria-hidden="true">
-        {preloadUrls.map((url) => (<img key={url} src={url} alt="" />))}
-      </div>
-
-      {/* Filter button */}
-      <div className="flex justify-end mb-3">
-        <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
-          <SlidersHorizontal className="w-4 h-4" />Filters
-        </button>
-      </div>
-
-      {/* Card */}
-      <div key={currentProfile.id}>
+      <div
+        className={`relative transition-all duration-300 ${
+          swipeDirection === 'left' ? '-translate-x-20 -rotate-6 opacity-0'
+            : swipeDirection === 'right' ? 'translate-x-20 rotate-6 opacity-0' : ''
+        }`}
+      >
+        {/* Photo */}
         <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px]">
-          {currentPhoto && (<img src={photoUrl} alt={currentProfile.name} className="absolute inset-0 w-full h-full object-cover" />)}
+          {currentPhoto && (
+            <Image src={photoUrl} alt={currentProfile.name} fill className="object-cover" priority unoptimized />
+          )}
           <div className="absolute inset-0 flex">
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.max(0, photoIndex - 1))} />
             <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.min(photos.length - 1, photoIndex + 1))} />
           </div>
           {photos.length > 1 && (
             <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
-              {photos.map((_, i) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 transition-all ${i === photoIndex ? 'bg-white' : 'bg-white/40'}`} />))}
+              {photos.map((_, i) => (
+                <div key={i} className={`h-1 rounded-full flex-1 max-w-12 transition-all ${i === photoIndex ? 'bg-white' : 'bg-white/40'}`} />
+              ))}
             </div>
           )}
-          {photoIndex > 0 && (<button onClick={() => setPhotoIndex(photoIndex - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronLeft className="w-4 h-4" /></button>)}
-          {photoIndex < photos.length - 1 && (<button onClick={() => setPhotoIndex(photoIndex + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronRight className="w-4 h-4" /></button>)}
+          {photoIndex > 0 && (
+            <button onClick={() => setPhotoIndex(photoIndex - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          {photoIndex < photos.length - 1 && (
+            <button onClick={() => setPhotoIndex(photoIndex + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
-                  {currentProfile.available_now && (
-                    <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Available Now</span>
-                  )}
-                </div>
+                <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
                 <div className="flex items-center gap-1.5 text-white/80 text-sm mt-1">
                   {currentProfile.city && (<><MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span></>)}
                 </div>
@@ -270,178 +164,77 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        {/* Swipe buttons */}
+        {/* Action buttons */}
         <div className="flex items-center justify-center gap-6 py-5">
-          <button onClick={() => handleSwipe('left')} disabled={animating} className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-300 transition-all active:scale-90 disabled:opacity-50"><X className="w-7 h-7 text-red-400" /></button>
-          <button onClick={() => handleSwipe('right')} disabled={animating} className="w-20 h-20 bg-sage-400 rounded-full flex items-center justify-center shadow-lg hover:bg-sage-500 transition-all active:scale-90 disabled:opacity-50"><Heart className="w-9 h-9 text-white" fill="white" /></button>
+          <button
+            onClick={() => handleSwipe('left')}
+            disabled={swiping}
+            className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg shadow-cream-300/30 hover:border-red-300 hover:shadow-red-200/30 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <X className="w-7 h-7 text-red-400" />
+          </button>
+          <button
+            onClick={() => handleSwipe('right')}
+            disabled={swiping}
+            className="w-20 h-20 bg-sage-400 rounded-full flex items-center justify-center shadow-lg shadow-sage-400/30 hover:bg-sage-500 hover:shadow-sage-500/30 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Heart className="w-9 h-9 text-white" fill="white" />
+          </button>
         </div>
-        <p className="text-center text-xs text-cream-600 -mt-3 mb-4">{remaining} {remaining === 1 ? 'person' : 'people'} left</p>
+        <p className="text-center text-xs text-cream-600 -mt-3 mb-4">
+          {remaining} {remaining === 1 ? 'person' : 'people'} left
+        </p>
 
         {/* Profile details */}
-        <div className="space-y-5">
+        <div className="space-y-4">
           {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
-
-          {/* Request a Date — tappable date idea pills */}
-          {currentProfile.date_ideas.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Request a Date</p></div>
-              <div className="space-y-2">
-                {currentProfile.date_ideas.map((idea, i) => (
-                  <button key={i} onClick={() => handleDateRequest(idea)}
-                    className="w-full flex items-center gap-3 bg-sage-400 rounded-xl p-3 text-left hover:bg-sage-500 transition-colors">
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-white">{idea.title}</p>
-                      {idea.location_name && <p className="text-xs text-white/70">{idea.location_name}</p>}
-                    </div>
-                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center shrink-0"><Calendar className="w-3.5 h-3.5 text-white" /></div>
-                  </button>
-                ))}
+          <div className="flex flex-wrap gap-2">
+            {currentProfile.profession && (
+              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
+                <Briefcase className="w-3 h-3" />{currentProfile.profession}
               </div>
-            </div>
-          )}
-
-          {/* Basic Info */}
-          {(currentProfile.identification || currentProfile.profession || currentProfile.education || currentProfile.height || currentProfile.body_type || currentProfile.ethnicity || currentProfile.religion) && (
-            <div>
-              <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
-              <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                {currentProfile.verified && (
-                  <div className="flex items-center gap-2 px-4 py-2.5"><ShieldCheck className="w-4 h-4 text-sage-600" /><span className="text-sm font-semibold text-sage-600">Verified Profile</span></div>
-                )}
-                {[
-                  { label: 'Identification', value: currentProfile.identification },
-                  { label: 'Profession', value: currentProfile.profession },
-                  { label: 'Education', value: currentProfile.education },
-                  { label: 'Height', value: currentProfile.height },
-                  { label: 'Body Type', value: currentProfile.body_type },
-                  { label: 'Ethnicity', value: currentProfile.ethnicity },
-                  { label: 'Religion', value: currentProfile.religion },
-                ].filter((r) => r.value).map((r) => (
-                  <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-                    <span className="text-sm text-cream-600">{r.label}</span>
-                    <span className="text-sm font-medium text-sage-800">{r.value}</span>
-                  </div>
-                ))}
+            )}
+            {currentProfile.education && (
+              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
+                <GraduationCap className="w-3 h-3" />{currentProfile.education}
               </div>
-            </div>
-          )}
-
-          {/* Lifestyle */}
-          {(currentProfile.drinking || currentProfile.smoking || currentProfile.workout || currentProfile.children) && (
-            <div>
-              <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
-              <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                {[
-                  { label: 'Drinking', value: currentProfile.drinking },
-                  { label: 'Smoking', value: currentProfile.smoking },
-                  { label: 'Workout', value: currentProfile.workout },
-                  { label: 'Children', value: currentProfile.children },
-                ].filter((r) => r.value).map((r) => (
-                  <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-                    <span className="text-sm text-cream-600">{r.label}</span>
-                    <span className="text-sm font-medium text-sage-800">{r.value}</span>
-                  </div>
-                ))}
+            )}
+            {currentProfile.height && (
+              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
+                <Ruler className="w-3 h-3" />{currentProfile.height}
               </div>
-            </div>
-          )}
-
-          {/* Interests */}
+            )}
+          </div>
           {currentProfile.interests.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
+              <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Interests</p>
               <div className="flex flex-wrap gap-1.5">
-                {currentProfile.interests.map((interest, i) => (<span key={i} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{interest}</span>))}
+                {currentProfile.interests.map((interest, i) => (
+                  <span key={i} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{interest}</span>
+                ))}
               </div>
             </div>
           )}
-
-          {/* Looking For */}
-          {currentProfile.looking_for && (
+          {currentProfile.date_ideas.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
-              <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{currentProfile.looking_for}</div>
+              <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Date ideas</p>
+              <div className="space-y-2">
+                {currentProfile.date_ideas.map((idea, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3">
+                    <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0">
+                      <Coffee className="w-4 h-4 text-gold-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-sage-800">{idea.title}</p>
+                      {idea.location_name && <p className="text-xs text-cream-600">{idea.location_name}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Success/Error Alert */}
-      {successAlert && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-sage-400 text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium max-w-sm text-center">
-          {successAlert}
-        </div>
-      )}
-
-      {/* Confirm Date Request Modal */}
-      {confirmRequest.visible && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
-          <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl">
-            {/* Green header */}
-            <div className="bg-gradient-to-b from-sage-400 to-sage-500 py-6 px-5 text-center">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Calendar className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-2xl font-display text-white">Request a Date</h3>
-              <p className="text-white/80 text-sm mt-1">with {confirmRequest.profileName || 'this person'}</p>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {/* Date idea details */}
-              {confirmRequest.idea && (
-                <div className="bg-cream-200 rounded-2xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-sage-400 rounded-full flex items-center justify-center shrink-0">
-                      <Heart className="w-4 h-4 text-white" fill="white" />
-                    </div>
-                    <p className="text-base font-bold text-sage-800 flex-1">{confirmRequest.idea.title}</p>
-                  </div>
-                  {confirmRequest.idea.location_name && (
-                    <div className="flex items-center gap-2 ml-12 mt-1">
-                      <MapPin className="w-3.5 h-3.5 text-sage-400" />
-                      <p className="text-sm text-cream-600">{confirmRequest.idea.location_name}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Credits info */}
-              {!isPremium && (
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                  <span className="text-amber-600">🎟️</span>
-                  <p className="text-sm text-amber-900 flex-1">
-                    1 credit will be used. You have <span className="font-bold">{dateCredits}</span> remaining.
-                  </p>
-                </div>
-              )}
-
-              {/* Buttons */}
-              <button onClick={confirmDateRequestAction}
-                className="w-full flex items-center justify-center gap-2 bg-sage-400 text-white font-bold py-4 rounded-2xl hover:bg-sage-500 transition-colors text-base">
-                <Send className="w-5 h-5" />Send Date Request
-              </button>
-              <button onClick={() => setConfirmRequest({ visible: false, idea: null, profileId: null, profileName: null })}
-                className="w-full py-3 text-center text-cream-600 font-semibold hover:text-sage-800 transition-colors">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* No Credits Modal */}
-      {noCreditsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
-          <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
-            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🎟️</span>
-            </div>
-            <h3 className="font-display text-xl text-sage-800 mb-2">No Date Request Credits</h3>
-            <p className="text-cream-700 text-sm mb-6">You need credits to send date requests. Upgrade to Premium for unlimited requests, or purchase a credit pack.</p>
-            <button onClick={() => setNoCreditsModal(false)} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Got it</button>
-          </div>
-        </div>
-      )}
 
       {/* Match modal */}
       {matchAlert && (
@@ -452,21 +245,23 @@ export default function DiscoverPage() {
             <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
             {matchAlert.photo && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
-                <img src={resolvePhoto(matchAlert.photo)} alt={matchAlert.name} className="object-cover w-full h-full" />
+                <Image
+                  src={matchAlert.photo.startsWith('http') ? matchAlert.photo : `${SUPABASE_STORAGE}${matchAlert.photo}`}
+                  alt={matchAlert.name} width={96} height={96} className="object-cover w-full h-full" unoptimized
+                />
               </div>
             )}
             <div className="flex flex-col gap-3">
               <button onClick={() => { dismissMatchAlert(); router.push('/matches'); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors flex items-center justify-center gap-2">
                 <MessageCircle className="w-4 h-4" />Send a message
               </button>
-              <button onClick={dismissMatchAlert} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">Keep swiping</button>
+              <button onClick={dismissMatchAlert} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">
+                Keep swiping
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
-        onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} />
     </>
   );
 }
