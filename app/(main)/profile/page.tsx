@@ -86,19 +86,29 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
       {/* Mobile: full screen / Desktop: centered card */}
       <div className="min-h-full md:flex md:items-start md:justify-center md:py-8 md:px-4">
         <div className="bg-cream-50 w-full md:max-w-lg md:rounded-3xl md:overflow-hidden md:shadow-2xl min-h-full md:min-h-0">
+          {/* Mobile top bar — covers the nav bleed */}
+          <div className="md:hidden bg-cream-50 flex items-center px-4 py-2 pt-[env(safe-area-inset-top,8px)]">
+            <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="flex-1 text-center text-sm font-bold text-sage-800 -ml-9">Profile Preview</span>
+          </div>
+          {/* Desktop header — hidden on mobile */}
+          <div className="hidden md:flex items-center justify-between px-5 pt-4 pb-2">
+            <button onClick={onClose} className="w-8 h-8 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 hover:text-sage-800 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <span className="text-sm text-sage-800 font-bold">Profile Preview</span>
+            <div className="w-8" />
+          </div>
           {/* Photo */}
-          <div className="relative w-full h-[55vh] md:h-[420px] min-h-[320px] max-h-[520px] bg-cream-300">
+          <div className="relative w-full h-[50vh] md:h-[420px] min-h-[300px] max-h-[520px] bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (
               <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4 pt-[env(safe-area-inset-top)]">
                 {photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}
               </div>
             )}
-            {/* Back/Close button */}
-            <button onClick={onClose}
-              className="absolute top-3 left-4 pt-[env(safe-area-inset-top)] w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors z-10">
-              <X className="w-5 h-5 md:block hidden" /><ChevronLeft className="w-5 h-5 md:hidden" />
-            </button>
         {/* Photo nav tap zones */}
         <div className="absolute inset-0 flex">
           <button className="w-1/2 h-full" onClick={() => setPhotoIdx(Math.max(0, photoIdx - 1))} />
