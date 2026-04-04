@@ -324,9 +324,9 @@ export default function DiscoverPage() {
       </div>
       <p className="text-center text-xs text-cream-500 -mt-2 mb-5">{remaining} {remaining === 1 ? 'person' : 'people'} left</p>
 
-        {/* Profile details */}
-        <div className="space-y-5">
-          {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
+      {/* Profile details */}
+      <div className="space-y-5">
+        {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
 
           {/* Request a Date — tappable date idea pills */}
           {currentProfile.date_ideas.length > 0 && (
@@ -410,7 +410,6 @@ export default function DiscoverPage() {
               <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{currentProfile.looking_for}</div>
             </div>
           )}
-        </div>
       </div>
 
       {/* Success/Error Alert */}
