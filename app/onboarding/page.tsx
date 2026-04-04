@@ -296,8 +296,8 @@ export default function OnboardingPage() {
       if (photo) {
         slots.push(
           <div key={photo.id} className={`relative rounded-2xl overflow-hidden bg-cream-300 group ${isFirst ? 'col-span-2 row-span-2' : ''}`}>
-            <div className={`w-full ${isFirst ? 'aspect-[3/4]' : 'aspect-square'}`}>
-              <img src={resolvePhoto(photo.photo_url)} alt="" className="w-full h-full object-cover" />
+            <div className={`relative w-full ${isFirst ? 'aspect-[3/4]' : 'aspect-square'}`}>
+              <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />
             </div>
             <button onClick={() => handleDeletePhoto(photo.id)}
               className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
