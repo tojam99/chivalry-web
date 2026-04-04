@@ -1,70 +1,311 @@
+/* /frontend/src/styles/globals.css */
+
+/* ===== CRITICAL MOBILE TOUCH FIXES - MUST BE FIRST ===== */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+input,
+textarea,
+button,
+select,
+a,
+label {
+  touch-action: manipulation !important;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* CRITICAL FIX: Prevent 300ms delay on mobile Chrome */
+input[type="number"],
+input[type="tel"],
+input[type="text"],
+textarea {
+  font-size: 16px !important;
+}
+/* ===== END MOBILE TOUCH FIXES ===== */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap');
-
-:root {
-  --font-display: 'DM Serif Display', serif;
-  --font-body: 'DM Sans', sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  font-family: var(--font-body);
-  color: #2C3028;
-  background: #FDFCFA;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-::selection {
-  background: #D4E5CC;
-  color: #2C3028;
+.loader {
+  border: 3px solid #ccc;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  animation: spin 0.8s linear infinite;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+.no-underline {
+  text-decoration: none !important;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+input,
+textarea,
+button,
+select {
+  font-family: inherit;
+}
+
+@media (max-width: 768px) {
+  .rating-box {
+    display: none !important;
   }
 }
 
-.prose-chivalry h2 {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  color: #2C3028;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
+@media (max-width: 768px) {
+  .image-shift {
+    transform: translateX(0px) !important;
+    padding-left: 0px !important;
+  }
 }
 
-.prose-chivalry p {
-  font-size: 0.938rem;
-  color: #5E5A50;
-  line-height: 1.8;
-  margin-bottom: 1rem;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.prose-chivalry ul {
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
+html, body, #__next {
+  height: 100%;
+  background-color: #f9fafb;
+  margin: 0;
+  padding: 0;
+  scrollbar-gutter: stable;
 }
 
-.prose-chivalry li {
-  font-size: 0.938rem;
-  color: #5E5A50;
-  line-height: 1.8;
-  margin-bottom: 0.5rem;
+#__next > div {
+  height: 100%;
 }
 
-.prose-chivalry strong {
-  color: #2C3028;
+
+
+.scrollHide::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes pulse {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+/* keep this OUTSIDE keyframes */
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: 340px !important;
+  }
+}
+
+.no-anchor { overflow-anchor: none; }
+
+/* Neutralize browser autofill paint */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: inherit !important;
+}
+input:-moz-autofill,
+textarea:-moz-autofill,
+select:-moz-autofill {
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  -moz-text-fill-color: inherit !important;
+}
+
+/* (optional) extend your existing scroll-hide classes to Firefox/Edge too */
+.scrollHide,
+.scroll-container {
+  -ms-overflow-style: none;   /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
+}
+.scrollHide::-webkit-scrollbar,
+.scroll-container::-webkit-scrollbar {
+  display: none;              /* Chrome/Safari/Opera */
+}
+
+
+.mapboxgl-ctrl-geocoder:not(:focus-within) .suggestions,
+.mapboxgl-ctrl-geocoder:not(:focus-within) .mapboxgl-ctrl-geocoder--suggestions {
+  display: none !important;
+}
+
+
+/* Keep Mapbox suggestions hidden until the geocoder is actually focused */
+body.geo-locked .mapboxgl-ctrl-geocoder .suggestions,
+body.geo-locked .mapboxgl-ctrl-geocoder .suggestions-wrapper,
+body.geo-locked .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--suggestions {
+  display: none !important;
+}
+
+
+
+
+/* Let flex/grid children shrink & prevent horizontal bleed */
+.yourBidWrap { min-width: 0; max-width: 100%; overflow-x: hidden; }
+
+/* If the child uses flex/grid columns, allow its immediate children to shrink */
+.yourBidWrap > * { min-width: 0; }
+
+/* Force wrapping of very long tokens anywhere (Safari included) */
+.yourBidWrap p,
+.yourBidWrap div,
+.yourBidWrap span {
+  white-space: pre-wrap;      /* keep \n and allow wrapping */
+  overflow-wrap: anywhere;    /* modern long-token wrap */
+  word-wrap: break-word;      /* legacy WebKit fallback */
+}
+
+/* Last resort for stubborn tokens on older Safari */
+@supports (-webkit-hyphens: none) {
+  .yourBidWrap p,
+  .yourBidWrap div,
+  .yourBidWrap span {
+    word-break: break-all;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
+}
+
+
+
+
+/* ===== Milestone card layout fixes ===== */
+.msRow {
+  display: grid;
+  grid-template-columns: 1fr minmax(360px, 520px);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .msRow { grid-template-columns: 1fr; }
+  .msRight { justify-self: stretch; }
+}
+
+/* Right panel container */
+.msRow .panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.msRow .panel .msHeading {
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+/* Column wrapper inside the panel */
+.msActionsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Full-width select so it never collides with rounded edges */
+.msCardSelect {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  outline: none;
+  background: #fff;
+}
+.msCardSelect:focus {
+  border-color: #a7f3d0;
+  box-shadow: 0 0 0 3px #ecfdf5;
+}
+
+/* Buttons row: right-aligned on desktop, wraps cleanly on mobile */
+.msActionRow {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.msPayBtn, .msManageBtn { white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .msActionRow { justify-content: flex-start; }
+}
+/* Mobile-only: Stack pillars grid on mobile */
+@media (max-width: 767px) {
+  .pillars-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+  
+/* Auto-capitalize ONLY these specific fields */
+input.capitalize,
+input[name="first_name"],
+input[name="last_name"],
+input[name="company_name"],
+input[name="city"],
+input[name="title"] {
+  text-transform: capitalize;
+}
+
+/* Never capitalize these */
+textarea,
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input.no-capitalize {
+  text-transform: none !important;
+}
+
+/* ===== Review Form Mobile Responsiveness ===== */
+.review-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .review-rating-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  
+ .review-rating-row span {
+    min-width: unset !important;
+  }
+}
+
+/* ===== Dispute Step Indicators - Mobile Only ===== */
+@media (max-width: 768px) {
+  .dispute-step-4 {
+    margin-left: calc(10% + 8px);
+  }
+  .dispute-step-5 {
+    margin-right: calc(10% + 8px);
+  }
 }
