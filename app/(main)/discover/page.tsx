@@ -36,7 +36,8 @@ function resolvePhoto(url: string): string {
 export default function DiscoverPage() {
   const [filters, setFilters] = useState<DiscoverFilters>({ showMe: 'Everyone', ageMin: 18, ageMax: 99, maxDistance: 100, verifiedOnly: false, sharedInterests: false });
   const [showFilters, setShowFilters] = useState(false);
-  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover(filters);
+  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh, myProfileId } = useDiscover(filters);
+  const [dateRequestAlert, setDateRequestAlert] = useState<string | null>(null);
   const router = useRouter();
 
   const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
@@ -99,20 +100,29 @@ export default function DiscoverPage() {
 
   if (!currentProfile) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="w-16 h-16 bg-cream-300 rounded-2xl flex items-center justify-center mb-4">
-          <Compass className="w-8 h-8 text-cream-600" />
+      <div>
+        <div className="flex justify-end mb-3">
+          <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
+            <SlidersHorizontal className="w-4 h-4" />Filters
+          </button>
         </div>
-        <h1 className="font-display text-2xl text-sage-800 mb-2">No more profiles</h1>
-        <p className="text-cream-700 max-w-sm mb-6">
-          You&apos;ve seen everyone nearby. Check back later for new people!
-        </p>
-        <button
-          onClick={() => { setSwipedIds(new Set()); refresh(); }}
-          className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+          <div className="w-16 h-16 bg-cream-300 rounded-2xl flex items-center justify-center mb-4">
+            <Compass className="w-8 h-8 text-cream-600" />
+          </div>
+          <h1 className="font-display text-2xl text-sage-800 mb-2">No more profiles</h1>
+          <p className="text-cream-700 max-w-sm mb-6">
+            You&apos;ve seen everyone nearby. Try adjusting your filters or check back later!
+          </p>
+          <button
+            onClick={() => { setSwipedIds(new Set()); refresh(); }}
+            className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
+        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
+          onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} />
       </div>
     );
   }
@@ -209,16 +219,26 @@ export default function DiscoverPage() {
           {/* Bio */}
           {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
 
-          {/* Date Ideas */}
+          {/* Date Ideas — tappable to request a date */}
           {currentProfile.date_ideas.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2"><Calendar className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Date ideas</p></div>
+              <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Request a Date</p></div>
               <div className="space-y-2">
                 {currentProfile.date_ideas.map((idea, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3">
-                    <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0"><Coffee className="w-4 h-4 text-gold-600" /></div>
-                    <div><p className="text-sm font-medium text-sage-800">{idea.title}</p>{idea.location_name && <p className="text-xs text-cream-600">{idea.location_name}</p>}</div>
-                  </div>
+                  <button key={i} onClick={() => {
+                    setDateRequestAlert(`Date request for "${idea.title}" sent! Like them to match first.`);
+                    handleSwipe('right');
+                    setTimeout(() => setDateRequestAlert(null), 3000);
+                  }}
+                    className="w-full flex items-center gap-3 bg-sage-400 rounded-xl p-3 text-left hover:bg-sage-500 transition-colors">
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-white">{idea.title}</p>
+                      {idea.location_name && <p className="text-xs text-white/70">{idea.location_name}</p>}
+                    </div>
+                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -293,6 +313,14 @@ export default function DiscoverPage() {
           )}
         </div>
       </div>
+
+      {/* Match modal */}
+      {/* Date request toast */}
+      {dateRequestAlert && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-sage-400 text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium max-w-sm text-center animate-pulse">
+          {dateRequestAlert}
+        </div>
+      )}
 
       {/* Match modal */}
       {matchAlert && (

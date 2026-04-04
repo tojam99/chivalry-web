@@ -6,7 +6,7 @@ import { useChat } from '@/lib/useChat';
 import { useActions } from '@/lib/useActions';
 import { ActionModal } from '@/components/ActionModal';
 import {
-  ArrowLeft, Send, Calendar, ChevronRight, Loader2, Check, CheckCheck, MoreVertical,
+  ArrowLeft, Send, Calendar, ChevronRight, Loader2, Check, CheckCheck, MoreVertical, Heart,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -122,8 +122,8 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Date banner */}
-      {matchInfo.date_info && (
+      {/* Date banner — show existing date OR "Request a Date" */}
+      {matchInfo.date_info ? (
         <button onClick={() => router.push('/dates')}
           className="flex items-center gap-2.5 px-4 py-2.5 border-b border-cream-200 bg-cream-100/50 shrink-0 hover:bg-cream-100 transition-colors w-full text-left">
           <div className="w-8 h-8 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0">
@@ -134,6 +134,13 @@ export default function ChatPage() {
             <p className="text-[11px] text-cream-700 truncate">{matchInfo.date_info.location_name ? `${matchInfo.date_info.location_name} · ` : ''}{friendlyStatus(matchInfo.date_info.status)}</p>
           </div>
           <ChevronRight className="w-4 h-4 text-cream-600 shrink-0" />
+        </button>
+      ) : (
+        <button onClick={() => router.push('/dates')}
+          className="flex items-center gap-2.5 px-4 py-2.5 border-b border-cream-200 bg-sage-50 shrink-0 hover:bg-sage-100 transition-colors w-full text-left">
+          <Heart className="w-4 h-4 text-sage-400 shrink-0" />
+          <span className="text-[13px] font-semibold text-sage-600 flex-1">Request a Date</span>
+          <ChevronRight className="w-4 h-4 text-sage-400 shrink-0" />
         </button>
       )}
 
