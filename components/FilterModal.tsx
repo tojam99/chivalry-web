@@ -37,8 +37,8 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center">
-      <div className="bg-cream-50 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/50 md:backdrop-blur-sm flex items-end md:items-center justify-center" style={{ height: '100dvh' }}>
+      <div className="bg-cream-50 rounded-t-3xl md:rounded-3xl w-full md:max-w-md max-h-[80vh] md:max-h-[85vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-cream-200 sticky top-0 bg-cream-50 z-10">
           <button onClick={handleReset} className="text-sm font-medium text-cream-600 hover:text-sage-800">Reset</button>
@@ -46,7 +46,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           <button onClick={handleApply} className="text-sm font-bold text-sage-400 hover:text-sage-600">Apply</button>
         </div>
 
-        <div className="px-5 py-5 space-y-7">
+        <div className="px-5 py-5 pb-10 space-y-7" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)' }}>
           {/* Show Me */}
           <div>
             <p className="text-sm font-bold text-sage-800 mb-3">Show Me</p>
