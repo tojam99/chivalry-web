@@ -90,7 +90,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
             <span className="text-xs text-cream-600 font-medium">Profile Preview</span>
             <div className="w-6" />
           </div>
-          <div className="relative aspect-[3/4] max-h-[480px] mx-4 mt-3 rounded-2xl overflow-hidden bg-cream-300">
+          <div className="relative aspect-[3/4] max-h-[480px] rounded-b-none overflow-hidden bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
             {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
@@ -104,7 +104,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
               {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
             </div>
           </div>
-          {profile.available_now && (<div className="mx-4 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
+          {profile.available_now && (<div className="mx-5 mt-3 bg-green-500 rounded-xl py-2 px-4 flex items-center justify-center gap-2"><Zap className="w-4 h-4 text-white" /><span className="text-white text-sm font-bold uppercase tracking-wide">Available Now!</span></div>)}
           <div className="px-5 pb-6 space-y-4 mt-4">
             {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
             {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
@@ -625,25 +625,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ══════════════ Discovery Settings ══════════════ */}
-      <div>
-        <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Discovery settings</label>
-        <div className="space-y-1">
-          <DropdownField label="Show me" value={profile.show_me} options={SHOW_ME_OPTIONS} onChange={(v) => updateField('show_me', v)} />
-          <div className="px-4 py-3 bg-cream-100 rounded-xl">
-            <div className="flex justify-between text-sm mb-3"><span className="text-cream-600">Age range</span><span className="font-medium text-sage-800">{profile.age_min} - {profile.age_max}</span></div>
-            <div className="flex gap-4 items-center">
-              <input type="range" min={18} max={65} value={profile.age_min} onChange={(e) => updateField('age_min', parseInt(e.target.value))} className="flex-1 slider-sage" />
-              <input type="range" min={18} max={65} value={profile.age_max} onChange={(e) => updateField('age_max', parseInt(e.target.value))} className="flex-1 slider-sage" />
-            </div>
-          </div>
-          <div className="px-4 py-3 bg-cream-100 rounded-xl">
-            <div className="flex justify-between text-sm mb-3"><span className="text-cream-600">Max distance</span><span className="font-medium text-sage-800">{profile.max_distance} mi</span></div>
-            <input type="range" min={1} max={100} value={profile.max_distance} onChange={(e) => updateField('max_distance', parseInt(e.target.value))} className="w-full slider-sage" />
-          </div>
-        </div>
-      </div>
-
       {/* ══════════════ General ══════════════ */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -715,44 +696,10 @@ export default function ProfilePage() {
       {/* Profile Preview */}
       {showPreview && <ProfilePreview profile={profile} photos={profile.photos} interests={profile.interests} dateIdeas={profile.date_ideas} onClose={() => setShowPreview(false)} />}
 
-      {/* Modern slider styles */}
+      {/* Custom styles */}
       <style jsx global>{`
-        .slider-sage {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 6px;
-          border-radius: 3px;
-          background: #EDE8DF;
-          outline: none;
-        }
-        .slider-sage::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: #7A9A6D;
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-          transition: transform 0.15s;
-        }
-        .slider-sage::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-        }
-        .slider-sage::-moz-range-thumb {
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: #7A9A6D;
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-        }
-        .slider-sage::-webkit-slider-runnable-track {
-          height: 6px;
-          border-radius: 3px;
-        }
+        /* Toggle switch animation */
+        .peer:checked ~ div::after { transform: translateX(100%); }
       `}</style>
     </div>
   );
