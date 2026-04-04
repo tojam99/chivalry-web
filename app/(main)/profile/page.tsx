@@ -82,20 +82,23 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-cream-50 overflow-y-auto" style={{ height: '100dvh' }}>
-      {/* Full-width photo */}
-      <div className="relative w-full h-[55vh] min-h-[320px] max-h-[520px] bg-cream-300">
-        {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
-        {photos.length > 1 && (
-          <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4 pt-[env(safe-area-inset-top)]">
-            {photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}
-          </div>
-        )}
-        {/* Back button */}
-        <button onClick={onClose}
-          className="absolute top-3 left-4 pt-[env(safe-area-inset-top)] w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors z-10">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+    <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-black/50 md:backdrop-blur-sm overflow-y-auto" style={{ height: '100dvh' }}>
+      {/* Mobile: full screen / Desktop: centered card */}
+      <div className="min-h-full md:flex md:items-start md:justify-center md:py-8 md:px-4">
+        <div className="bg-cream-50 w-full md:max-w-lg md:rounded-3xl md:overflow-hidden md:shadow-2xl min-h-full md:min-h-0">
+          {/* Photo */}
+          <div className="relative w-full h-[55vh] md:h-[420px] min-h-[320px] max-h-[520px] bg-cream-300">
+            {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
+            {photos.length > 1 && (
+              <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4 pt-[env(safe-area-inset-top)]">
+                {photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}
+              </div>
+            )}
+            {/* Back/Close button */}
+            <button onClick={onClose}
+              className="absolute top-3 left-4 pt-[env(safe-area-inset-top)] w-9 h-9 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors z-10">
+              <X className="w-5 h-5 md:block hidden" /><ChevronLeft className="w-5 h-5 md:hidden" />
+            </button>
         {/* Photo nav tap zones */}
         <div className="absolute inset-0 flex">
           <button className="w-1/2 h-full" onClick={() => setPhotoIdx(Math.max(0, photoIdx - 1))} />
@@ -170,6 +173,8 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
           Back to Profile
         </button>
       </div>
+      </div>{/* end card */}
+      </div>{/* end flex wrapper */}
     </div>
   );
 }
