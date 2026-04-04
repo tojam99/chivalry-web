@@ -84,14 +84,15 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
   return (
     <div className="-mx-4 -mt-6 -mb-6 min-h-screen bg-cream-50">
       {/* Header bar */}
-      <div className="bg-cream-50 flex items-center px-4 py-3">
-        <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
+      <div className="bg-cream-50 flex items-center px-4 py-3 max-w-2xl mx-auto">
+        <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors z-10 shrink-0 cursor-pointer">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="flex-1 text-center text-sm font-bold text-sage-800 -ml-9">Profile Preview</span>
+        <span className="flex-1 text-center text-sm font-bold text-sage-800 mr-9">Profile Preview</span>
       </div>
       {/* Photo */}
-      <div className="relative w-full h-[55vh] min-h-[320px] max-h-[520px] bg-cream-300">
+      <div className="max-w-2xl mx-auto">
+        <div className="relative w-full h-[55vh] min-h-[320px] max-h-[520px] bg-cream-300 md:rounded-2xl md:overflow-hidden md:mx-auto">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (
               <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4 pt-[env(safe-area-inset-top)]">
@@ -122,9 +123,10 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
           {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
         </div>
       </div>
+      </div>{/* end photo max-w wrapper */}
 
       {/* Content */}
-      <div className="max-w-lg mx-auto px-5 pb-20 space-y-5 mt-5">
+      <div className="max-w-2xl mx-auto px-5 pb-20 space-y-5 mt-5">
         {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
         {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
           <div>
