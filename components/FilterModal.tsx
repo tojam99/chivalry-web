@@ -137,6 +137,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-[11px] text-white/80">Verified-only, shared interests, and more</p>
             </div>
           </div>
+          <div className="h-[50px]" />
         </div>
       </div>
     </div>
