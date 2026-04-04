@@ -17,6 +17,11 @@ import {
   Coffee,
   Compass,
   Loader2,
+  Info,
+  ShieldCheck,
+  Leaf,
+  Search,
+  Calendar,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -189,28 +194,75 @@ export default function DiscoverPage() {
         </p>
 
         {/* Profile details */}
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* Bio */}
           {currentProfile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{currentProfile.bio}</p>}
-          <div className="flex flex-wrap gap-2">
-            {currentProfile.profession && (
-              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
-                <Briefcase className="w-3 h-3" />{currentProfile.profession}
+
+          {/* Date Ideas */}
+          {currentProfile.date_ideas.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2"><Calendar className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Date ideas</p></div>
+              <div className="space-y-2">
+                {currentProfile.date_ideas.map((idea, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3">
+                    <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0"><Coffee className="w-4 h-4 text-gold-600" /></div>
+                    <div><p className="text-sm font-medium text-sage-800">{idea.title}</p>{idea.location_name && <p className="text-xs text-cream-600">{idea.location_name}</p>}</div>
+                  </div>
+                ))}
               </div>
-            )}
-            {currentProfile.education && (
-              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
-                <GraduationCap className="w-3 h-3" />{currentProfile.education}
+            </div>
+          )}
+
+          {/* Basic Info */}
+          {(currentProfile.identification || currentProfile.profession || currentProfile.education || currentProfile.height || currentProfile.body_type || currentProfile.ethnicity || currentProfile.religion) && (
+            <div>
+              <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
+              <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
+                {currentProfile.verified && (
+                  <div className="flex items-center gap-2 px-4 py-2.5"><ShieldCheck className="w-4 h-4 text-sage-600" /><span className="text-sm font-semibold text-sage-600">Verified Profile</span></div>
+                )}
+                {[
+                  { label: 'Identification', value: currentProfile.identification },
+                  { label: 'Profession', value: currentProfile.profession },
+                  { label: 'Education', value: currentProfile.education },
+                  { label: 'Height', value: currentProfile.height },
+                  { label: 'Body Type', value: currentProfile.body_type },
+                  { label: 'Ethnicity', value: currentProfile.ethnicity },
+                  { label: 'Religion', value: currentProfile.religion },
+                ].filter((r) => r.value).map((r) => (
+                  <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="text-sm text-cream-600">{r.label}</span>
+                    <span className="text-sm font-medium text-sage-800">{r.value}</span>
+                  </div>
+                ))}
               </div>
-            )}
-            {currentProfile.height && (
-              <div className="flex items-center gap-1.5 bg-cream-200 text-cream-800 text-xs font-medium px-3 py-1.5 rounded-lg">
-                <Ruler className="w-3 h-3" />{currentProfile.height}
+            </div>
+          )}
+
+          {/* Lifestyle */}
+          {(currentProfile.drinking || currentProfile.smoking || currentProfile.workout || currentProfile.children) && (
+            <div>
+              <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
+              <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
+                {[
+                  { label: 'Drinking', value: currentProfile.drinking },
+                  { label: 'Smoking', value: currentProfile.smoking },
+                  { label: 'Workout', value: currentProfile.workout },
+                  { label: 'Children', value: currentProfile.children },
+                ].filter((r) => r.value).map((r) => (
+                  <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="text-sm text-cream-600">{r.label}</span>
+                    <span className="text-sm font-medium text-sage-800">{r.value}</span>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Interests */}
           {currentProfile.interests.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Interests</p>
+              <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
               <div className="flex flex-wrap gap-1.5">
                 {currentProfile.interests.map((interest, i) => (
                   <span key={i} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{interest}</span>
@@ -218,21 +270,13 @@ export default function DiscoverPage() {
               </div>
             </div>
           )}
-          {currentProfile.date_ideas.length > 0 && (
+
+          {/* Looking For */}
+          {currentProfile.looking_for && (
             <div>
-              <p className="text-xs font-medium text-cream-600 uppercase tracking-wide mb-2">Date ideas</p>
-              <div className="space-y-2">
-                {currentProfile.date_ideas.map((idea, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-cream-100 rounded-xl p-3">
-                    <div className="w-9 h-9 bg-gold-400/20 rounded-lg flex items-center justify-center shrink-0">
-                      <Coffee className="w-4 h-4 text-gold-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-sage-800">{idea.title}</p>
-                      {idea.location_name && <p className="text-xs text-cream-600">{idea.location_name}</p>}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
+              <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl">
+                <Heart className="w-4 h-4" />{currentProfile.looking_for}
               </div>
             </div>
           )}
