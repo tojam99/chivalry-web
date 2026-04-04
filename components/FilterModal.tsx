@@ -158,45 +158,41 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
         .slider-modern {
           -webkit-appearance: none;
           appearance: none;
-          height: 4px;
-          border-radius: 2px;
+          height: 5px;
+          border-radius: 3px;
           background: #EDE8DF;
           outline: none;
-          transition: background 0.2s;
         }
         .slider-modern::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 20px;
-          height: 20px;
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
-          background: white;
+          background: #7A9A6D;
           cursor: pointer;
-          border: 2px solid #7A9A6D;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0 0 1px rgba(122,154,109,0.1);
-          transition: transform 0.15s, box-shadow 0.15s;
+          border: 3px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
         .slider-modern::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 2px rgba(122,154,109,0.2);
+          transform: scale(1.1);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         }
         .slider-modern::-webkit-slider-thumb:active {
-          transform: scale(1.1);
-          background: #7A9A6D;
-          border-color: #7A9A6D;
+          transform: scale(1.05);
         }
         .slider-modern::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
-          background: white;
+          background: #7A9A6D;
           cursor: pointer;
-          border: 2px solid #7A9A6D;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+          border: 3px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
         .slider-modern::-moz-range-track {
-          height: 4px;
-          border-radius: 2px;
+          height: 5px;
+          border-radius: 3px;
           background: #EDE8DF;
         }
         .slider-modern::-webkit-slider-runnable-track {
