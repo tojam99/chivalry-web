@@ -85,12 +85,12 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
       <div className="min-h-full flex items-start justify-center py-6 px-4">
         <div className="bg-cream-50 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between px-5 pt-5">
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
             <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
             <span className="text-xs text-cream-600 font-medium">Profile Preview</span>
             <div className="w-6" />
           </div>
-          <div className="relative aspect-[3/4] max-h-[480px] rounded-b-none overflow-hidden bg-cream-300">
+          <div className="relative w-full h-[420px] overflow-hidden bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
             {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
