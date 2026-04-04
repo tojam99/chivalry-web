@@ -83,7 +83,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start justify-center py-4 sm:py-6 px-3 sm:px-4">
+      <div className="min-h-full flex items-start justify-center py-4 sm:py-6 px-3 sm:px-4 pb-[env(safe-area-inset-bottom,24px)]">
         <div className="bg-cream-50 rounded-3xl max-w-md sm:max-w-lg w-full overflow-hidden shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
@@ -116,7 +116,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
               {profile.city && <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}
             </div>
           </div>
-          <div className="px-5 pb-6 space-y-4 mt-4">
+          <div className="px-5 pb-16 space-y-4 mt-4">
             {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
             {dateIdeas.filter((d: any) => d.title?.trim()).length > 0 && (
               <div>
