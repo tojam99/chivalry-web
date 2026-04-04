@@ -235,20 +235,55 @@ export default function ProfilePage() {
       {/* Photos */}
       <div>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-        <div className="grid grid-cols-3 gap-2" style={{ gridAutoRows: '1fr' }}>
-          {profile.photos.sort((a, b) => a.sort_order - b.sort_order).map((photo, idx) => (
-            <div key={photo.id} className={`relative rounded-xl overflow-hidden group ${idx === 0 ? 'col-span-2 row-span-2' : ''}`} style={{ aspectRatio: idx === 0 ? '3/4' : '1/1' }}>
-              <img src={resolvePhoto(photo.photo_url)} alt="" className="w-full h-full object-cover" />
-              <button onClick={() => deletePhoto(photo.id)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-white" /></button>
+        {(() => {
+          const sorted = [...profile.photos].sort((a, b) => a.sort_order - b.sort_order);
+          function photoCell(idx: number) {
+            const photo = sorted[idx];
+            if (photo) {
+              return (
+                <div key={photo.id} className="relative w-full h-full rounded-xl overflow-hidden bg-cream-300 group">
+                  <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <button onClick={() => deletePhoto(photo.id)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-white" /></button>
+                  {idx === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Main</div>}
+                </div>
+              );
+            } else if (idx === sorted.length && sorted.length < 6) {
+              return (
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  className="w-full h-full rounded-xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors">
+                  {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : <><Camera className="w-5 h-5 text-cream-500" /><span className="text-[10px] text-cream-500 mt-1">Add</span></>}
+                </button>
+              );
+            }
+            return <div className="w-full h-full rounded-xl bg-cream-100 border border-cream-200" />;
+          }
+          return (
+            <div className="space-y-2">
+              {/* Top row: main photo (2/3) + 2 stacked (1/3) */}
+              <div className="flex gap-2" style={{ height: '260px' }}>
+                <div className="flex-[2] min-w-0 relative overflow-hidden rounded-xl">
+                  {photoCell(0)}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col gap-2">
+                  <div className="flex-1 min-h-0 relative overflow-hidden rounded-xl">
+                    {photoCell(1)}
+                  </div>
+                  <div className="flex-1 min-h-0 relative overflow-hidden rounded-xl">
+                    {photoCell(2)}
+                  </div>
+                </div>
+              </div>
+              {/* Bottom row: 3 equal squares */}
+              <div className="grid grid-cols-3 gap-2">
+                {[3, 4, 5].map((i) => (
+                  <div key={`slot-${i}`} className="relative aspect-square overflow-hidden rounded-xl">
+                    {photoCell(i)}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-          {profile.photos.length < 6 && (
-            <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-              className="aspect-square bg-cream-200 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-cream-400 cursor-pointer hover:border-sage-400 hover:bg-cream-100 transition-colors">
-              {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : <><Camera className="w-6 h-6 text-cream-600" /><span className="text-[10px] text-cream-600 mt-1">Add Photo</span></>}
-            </button>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Name & Location with Google Places picker */}
