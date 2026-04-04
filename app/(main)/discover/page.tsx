@@ -8,7 +8,7 @@ import FilterModal from '@/components/FilterModal';
 import {
   Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
   Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
-  SlidersHorizontal, Send, Undo2, Star,
+  SlidersHorizontal, Send, Undo2, Maximize2,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -29,6 +29,7 @@ export default function DiscoverPage() {
   const [animating, setAnimating] = useState(false);
   const [lastSwiped, setLastSwiped] = useState<{ id: string; direction: string } | null>(null);
   const [swipeAnimation, setSwipeAnimation] = useState<'left' | 'right' | null>(null);
+  const [expandedPhoto, setExpandedPhoto] = useState(false);
 
   // Date request state
   const [dateCredits, setDateCredits] = useState(0);
@@ -232,7 +233,7 @@ export default function DiscoverPage() {
           <div className="w-16 h-16 bg-cream-300 rounded-2xl flex items-center justify-center mb-4">
             <Compass className="w-8 h-8 text-cream-600" />
           </div>
-          <h1 className="font-display text-2xl text-sage-800 mb-2">No more profiles</h1>
+          <h1 className="font-bold text-2xl text-sage-800 mb-2">No more profiles</h1>
           <p className="text-cream-700 max-w-sm mb-6">Try adjusting your filters or check back later!</p>
           <button onClick={() => { setSwipedIds(new Set()); refresh(); }} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">Refresh</button>
         </div>
@@ -264,25 +265,32 @@ export default function DiscoverPage() {
         swipeAnimation === 'left' ? '-translate-x-full opacity-0 rotate-[-8deg]' :
         swipeAnimation === 'right' ? 'translate-x-full opacity-0 rotate-[8deg]' : ''
       }`}>
-        <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px] w-full">
+        <div className="relative bg-cream-300 rounded-3xl overflow-hidden aspect-[3/4] max-h-[520px] w-full cursor-pointer"
+          onClick={() => setExpandedPhoto(true)}>
           {currentPhoto && (<img src={photoUrl} alt={currentProfile.name} className="absolute inset-0 w-full h-full object-cover" />)}
+          {/* Photo nav — stop propagation so tap-to-expand doesn't fire */}
           <div className="absolute inset-0 flex">
-            <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.max(0, photoIndex - 1))} />
-            <button className="w-1/2 h-full" onClick={() => setPhotoIndex(Math.min(photos.length - 1, photoIndex + 1))} />
+            <button className="w-1/2 h-full" onClick={(e) => { e.stopPropagation(); setPhotoIndex(Math.max(0, photoIndex - 1)); }} />
+            <button className="w-1/2 h-full" onClick={(e) => { e.stopPropagation(); setPhotoIndex(Math.min(photos.length - 1, photoIndex + 1)); }} />
           </div>
           {photos.length > 1 && (
             <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
               {photos.map((_, i) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 transition-all ${i === photoIndex ? 'bg-white' : 'bg-white/40'}`} />))}
             </div>
           )}
-          {photoIndex > 0 && (<button onClick={() => setPhotoIndex(photoIndex - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronLeft className="w-4 h-4" /></button>)}
-          {photoIndex < photos.length - 1 && (<button onClick={() => setPhotoIndex(photoIndex + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronRight className="w-4 h-4" /></button>)}
+          {photoIndex > 0 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex - 1); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronLeft className="w-4 h-4" /></button>)}
+          {photoIndex < photos.length - 1 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex + 1); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronRight className="w-4 h-4" /></button>)}
+          {/* Expand icon */}
+          <button onClick={(e) => { e.stopPropagation(); setExpandedPhoto(true); }}
+            className="absolute top-3 right-3 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors">
+            <Maximize2 className="w-4 h-4" />
+          </button>
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
+                  <h2 className="text-white font-bold text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
                   {currentProfile.available_now && (
                     <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Available Now</span>
                   )}
@@ -297,8 +305,8 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Action buttons — centered row: Rewind / Pass / Like / Super Like */}
-      <div className="flex items-center justify-center gap-4 py-5">
+      {/* Action buttons — centered: Rewind / Pass / Like */}
+      <div className="flex items-center justify-center gap-5 py-5">
         {/* Rewind */}
         <button onClick={handleRewind} disabled={!lastSwiped || animating}
           className="w-12 h-12 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-md hover:border-amber-300 hover:shadow-lg transition-all active:scale-90 disabled:opacity-30 disabled:hover:border-cream-300 disabled:hover:shadow-md"
@@ -307,22 +315,16 @@ export default function DiscoverPage() {
         </button>
         {/* Pass */}
         <button onClick={() => handleSwipe('left')} disabled={animating}
-          className="w-14 h-14 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-300 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
+          className="w-16 h-16 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-300 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
           <X className="w-7 h-7 text-red-400" />
         </button>
         {/* Like */}
         <button onClick={() => handleSwipe('right')} disabled={animating}
-          className="w-[72px] h-[72px] bg-sage-400 rounded-full flex items-center justify-center shadow-lg hover:bg-sage-500 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
+          className="w-16 h-16 bg-sage-400 rounded-full flex items-center justify-center shadow-lg hover:bg-sage-500 hover:shadow-xl transition-all active:scale-90 disabled:opacity-50">
           <Heart className="w-8 h-8 text-white" fill="white" />
         </button>
-        {/* Super Like */}
-        <button onClick={() => handleSwipe('right')} disabled={animating}
-          className="w-12 h-12 bg-white border-2 border-cream-300 rounded-full flex items-center justify-center shadow-md hover:border-blue-300 hover:shadow-lg transition-all active:scale-90 disabled:opacity-50"
-          title="Super Like">
-          <Star className="w-5 h-5 text-blue-400" fill="currentColor" />
-        </button>
       </div>
-      <p className="text-center text-xs text-cream-500 -mt-2 mb-5">{remaining} {remaining === 1 ? 'person' : 'people'} left</p>
+      {/* <p className="text-center text-xs text-cream-500 -mt-2 mb-5">{remaining} {remaining === 1 ? 'person' : 'people'} left</p> */}
 
       {/* Profile details */}
       <div className="space-y-5">
@@ -428,7 +430,7 @@ export default function DiscoverPage() {
               <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Calendar className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-display text-white">Request a Date</h3>
+              <h3 className="text-2xl font-bold text-white">Request a Date</h3>
               <p className="text-white/80 text-sm mt-1">with {confirmRequest.profileName || 'this person'}</p>
             </div>
 
@@ -482,7 +484,7 @@ export default function DiscoverPage() {
             <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🎟️</span>
             </div>
-            <h3 className="font-display text-xl text-sage-800 mb-2">No Date Request Credits</h3>
+            <h3 className="font-bold text-xl text-sage-800 mb-2">No Date Request Credits</h3>
             <p className="text-cream-700 text-sm mb-6">You need credits to send date requests. Upgrade to Premium for unlimited requests, or purchase a credit pack.</p>
             <button onClick={() => setNoCreditsModal(false)} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Got it</button>
           </div>
@@ -494,7 +496,7 @@ export default function DiscoverPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
             <Sparkles className="w-10 h-10 text-gold-400 mx-auto mb-4" />
-            <h2 className="font-display text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
+            <h2 className="font-bold text-3xl text-sage-800 mb-2">It&apos;s a match!</h2>
             <p className="text-cream-700 mb-6">You and {matchAlert.name} liked each other</p>
             {matchAlert.photo && (
               <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-sage-400">
@@ -507,6 +509,39 @@ export default function DiscoverPage() {
               </button>
               <button onClick={dismissMatchAlert} className="w-full text-cream-700 font-medium py-3 rounded-2xl hover:bg-cream-100 transition-colors">Keep swiping</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded photo lightbox */}
+      {expandedPhoto && currentPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setExpandedPhoto(false)}>
+          <button onClick={() => setExpandedPhoto(false)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10">
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative max-w-3xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+            <img src={photoUrl} alt={currentProfile.name} className="w-full h-full object-contain rounded-xl" />
+            {/* Photo nav in lightbox */}
+            {photos.length > 1 && (
+              <>
+                <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-6">
+                  {photos.map((_, i) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIndex ? 'bg-white' : 'bg-white/40'}`} />))}
+                </div>
+                {photoIndex > 0 && (
+                  <button onClick={() => setPhotoIndex(photoIndex - 1)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/60">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                )}
+                {photoIndex < photos.length - 1 && (
+                  <button onClick={() => setPhotoIndex(photoIndex + 1)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/60">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
