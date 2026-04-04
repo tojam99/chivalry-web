@@ -39,19 +39,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 flex flex-col overscroll-none">
-      {/* Prevent iOS bounce scroll globally */}
+    <div className="h-screen bg-cream-50 flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+      {/* Prevent iOS bounce */}
       <style jsx global>{`
         html, body {
+          overflow: hidden;
+          height: 100%;
           overscroll-behavior: none;
-          -webkit-overflow-scrolling: touch;
-        }
-        html {
-          height: -webkit-fill-available;
-        }
-        body {
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
+          position: fixed;
+          width: 100%;
         }
       `}</style>
       {/* Top bar — desktop */}
@@ -110,8 +106,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </button>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 pt-14 md:pt-16 pb-20 md:pb-6 overflow-y-auto overscroll-contain">
+      {/* Main content — only this area scrolls */}
+      <main className="flex-1 min-h-0 pt-14 md:pt-16 pb-20 md:pb-6 overflow-y-auto overscroll-contain">
         <div className="max-w-2xl mx-auto px-4 py-6">{children}</div>
       </main>
 
