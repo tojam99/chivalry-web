@@ -246,30 +246,38 @@ export default function OnboardingPage() {
     }, 800);
     try {
       const age = calculateAge();
-      await supabase.from('profiles').update({
+      const { error: updateError } = await supabase.from('profiles').update({
         name: name.trim(), age, identification: gender, city, latitude, longitude,
         profession: profession.trim() || null, education: education.trim() || null,
         bio: bio.trim(), looking_for: lookingFor, onboarded: true,
         updated_at: new Date().toISOString(),
       }).eq('id', profileId);
 
+      if (updateError) console.error('Profile update error:', updateError);
+
+      // Save interests (don't let individual failures block navigation)
       for (const interestName of selectedInterests) {
         const interest = allInterests.find((i) => i.name === interestName);
         if (interest) {
           await supabase.from('profile_interests').upsert(
             { profile_id: profileId, interest_id: interest.id },
             { onConflict: 'profile_id,interest_id' }
-          );
+          ).catch((e) => console.error('Interest save error:', e));
         }
       }
-      await new Promise((r) => setTimeout(r, 1200));
+
+      await new Promise((r) => setTimeout(r, 1500));
       clearInterval(stepInterval);
-      router.push('/discover');
+      setShowBuildingModal(false);
+      // Use window.location for a hard redirect to ensure the page fully reloads
+      window.location.href = '/discover';
     } catch (err) {
       console.error('Finish error:', err);
       clearInterval(stepInterval);
       setShowBuildingModal(false);
       setSaving(false);
+      // Still try to navigate even if something failed
+      window.location.href = '/discover';
     }
   }
 
