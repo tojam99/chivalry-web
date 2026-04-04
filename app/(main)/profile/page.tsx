@@ -82,8 +82,8 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start justify-center py-4 sm:py-6 px-3 sm:px-4 pb-[env(safe-area-inset-bottom,24px)]">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto overscroll-contain">
+      <div className="min-h-full flex items-start justify-center pt-[env(safe-area-inset-top,16px)] pb-[env(safe-area-inset-bottom,24px)] py-4 sm:py-6 px-3 sm:px-4">
         <div className="bg-cream-50 rounded-3xl max-w-md sm:max-w-lg w-full overflow-hidden shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
