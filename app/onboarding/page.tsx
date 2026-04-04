@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase-browser';
 import PlacePicker from '@/components/PlacePicker';
 import {
   ChevronRight, ChevronLeft, Camera, Loader2, MapPin, Check, X, Trash2,
-  Heart, Sparkles, Shield,
+  Heart, Sparkles, Shield, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -221,7 +221,24 @@ export default function OnboardingPage() {
 
   async function handleDeletePhoto(photoId: string) {
     await supabase.from('profile_photos').delete().eq('id', photoId);
-    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    setPhotos((prev) => {
+      const filtered = prev.filter((p) => p.id !== photoId);
+      // Re-index sort_order after deletion
+      return filtered.map((p, i) => ({ ...p, sort_order: i }));
+    });
+  }
+
+  async function handleSwapPhotos(fromIdx: number, toIdx: number) {
+    if (toIdx < 0 || toIdx >= photos.length) return;
+    const updated = [...photos];
+    [updated[fromIdx], updated[toIdx]] = [updated[toIdx], updated[fromIdx]];
+    // Update sort_order locally
+    const reindexed = updated.map((p, i) => ({ ...p, sort_order: i }));
+    setPhotos(reindexed);
+    // Persist to DB
+    for (const p of reindexed) {
+      await supabase.from('profile_photos').update({ sort_order: p.sort_order }).eq('id', p.id);
+    }
   }
 
   function handleContinue() {
@@ -299,18 +316,40 @@ export default function OnboardingPage() {
   function resolvePhoto(url: string): string { return url.startsWith('http') ? url : `${SUPABASE_STORAGE}${url}`; }
 
   function renderPhotoGrid() {
-    // Build a slot for each position
     function photoSlot(i: number, className: string) {
       const photo = photos[i];
       if (photo) {
         return (
           <div key={photo.id} className={`relative rounded-2xl overflow-hidden bg-cream-300 group ${className}`}>
             <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            {/* Controls overlay — visible on hover */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+            {/* Delete */}
             <button onClick={() => handleDeletePhoto(photo.id)}
-              className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <Trash2 className="w-3.5 h-3.5 text-white" />
             </button>
-            {i === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Main</div>}
+            {/* Reorder arrows */}
+            {photos.length > 1 && (
+              <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                {i > 0 && (
+                  <button onClick={() => handleSwapPhotos(i, i - 1)}
+                    className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center"
+                    title="Move left">
+                    <ArrowLeft className="w-3 h-3 text-white" />
+                  </button>
+                )}
+                {i < photos.length - 1 && (
+                  <button onClick={() => handleSwapPhotos(i, i + 1)}
+                    className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center"
+                    title="Move right">
+                    <ArrowRight className="w-3 h-3 text-white" />
+                  </button>
+                )}
+              </div>
+            )}
+            {/* Main badge */}
+            {i === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide z-10">Main</div>}
           </div>
         );
       } else if (i === photos.length) {
@@ -328,7 +367,6 @@ export default function OnboardingPage() {
 
     return (
       <div className="space-y-2.5">
-        {/* Top row: main photo (2/3 width) + 2 stacked squares (1/3 width) */}
         <div className="flex gap-2.5" style={{ height: '280px' }}>
           <div className="flex-[2] min-w-0 relative">
             {photoSlot(0, 'w-full h-full')}
@@ -342,7 +380,6 @@ export default function OnboardingPage() {
             </div>
           </div>
         </div>
-        {/* Bottom row: 3 equal squares */}
         <div className="grid grid-cols-3 gap-2.5">
           {[3, 4, 5].map((i) => (
             <div key={`slot-${i}`} className="relative aspect-square">
@@ -428,7 +465,7 @@ export default function OnboardingPage() {
             <div className="space-y-5 animate-fadeIn">
               <div>
                 <h2 className="font-display text-2xl text-sage-800">Add your best photos</h2>
-                <p className="text-cream-600 text-sm mt-1">At least 1 photo required, up to 6</p>
+                <p className="text-cream-600 text-sm mt-1">At least 1 photo required, up to 6. Hover to reorder.</p>
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
               {renderPhotoGrid()}
