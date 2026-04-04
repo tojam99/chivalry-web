@@ -87,7 +87,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
       <div className="min-h-full md:flex md:items-start md:justify-center md:py-8 md:px-4">
         <div className="bg-cream-50 w-full md:max-w-lg md:rounded-3xl md:overflow-hidden md:shadow-2xl min-h-full md:min-h-0">
           {/* Mobile top bar — covers the nav bleed */}
-          <div className="md:hidden bg-cream-50 flex items-center px-4 py-2 pt-[env(safe-area-inset-top,8px)]">
+          <div className="md:hidden bg-cream-50 flex items-center px-4 py-2 pt-[max(env(safe-area-inset-top,0px),12px)]" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}>
             <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </button>
