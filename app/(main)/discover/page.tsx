@@ -255,7 +255,12 @@ export default function DiscoverPage() {
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div>
-                <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-white font-display text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
+                  {currentProfile.available_now && (
+                    <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Available Now</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5 text-white/80 text-sm mt-1">
                   {currentProfile.city && (<><MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span></>)}
                 </div>
