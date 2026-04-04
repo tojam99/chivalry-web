@@ -46,7 +46,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           <button onClick={handleApply} className="text-sm font-bold text-sage-400 hover:text-sage-600">Apply</button>
         </div>
 
-        <div className="px-5 py-5 pb-10 space-y-7" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)' }}>
+        <div className="px-5 py-5 space-y-7" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)' }}>
           {/* Show Me */}
           <div>
             <p className="text-sm font-bold text-sage-800 mb-3">Show Me</p>
@@ -71,14 +71,14 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
                 <span className="text-xs text-cream-600 w-8">Min</span>
                 <input type="range" min={18} max={99} value={local.ageMin}
                   onChange={(e) => { const v = parseInt(e.target.value); if (v < local.ageMax) setLocal({ ...local, ageMin: v }); }}
-                  className="flex-1 accent-sage-400" />
+                  className="flex-1 slider-modern" />
                 <span className="text-sm font-semibold text-sage-800 w-6 text-right">{local.ageMin}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-cream-600 w-8">Max</span>
                 <input type="range" min={18} max={99} value={local.ageMax}
                   onChange={(e) => { const v = parseInt(e.target.value); if (v > local.ageMin) setLocal({ ...local, ageMax: v }); }}
-                  className="flex-1 accent-sage-400" />
+                  className="flex-1 slider-modern" />
                 <span className="text-sm font-semibold text-sage-800 w-6 text-right">{local.ageMax}</span>
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
             </div>
             <input type="range" min={1} max={100} value={local.maxDistance}
               onChange={(e) => setLocal({ ...local, maxDistance: parseInt(e.target.value) })}
-              className="w-full accent-sage-400" />
+              className="w-full slider-modern" />
             <div className="flex justify-between mt-1">
               <span className="text-[10px] text-cream-600">1 mi</span>
               <span className="text-[10px] text-cream-600">25 mi</span>
@@ -137,9 +137,62 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-[11px] text-white/80">Verified-only, shared interests, and more</p>
             </div>
           </div>
-          <div className="h-[50px]" />
+          {/* Bottom spacer — more on mobile, less on desktop */}
+          <div className="h-[50px] md:h-[10px]" />
         </div>
       </div>
+
+      {/* Modern slider styles */}
+      <style jsx global>{`
+        .slider-modern {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 4px;
+          border-radius: 2px;
+          background: #EDE8DF;
+          outline: none;
+          transition: background 0.2s;
+        }
+        .slider-modern::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 2px solid #7A9A6D;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0 0 1px rgba(122,154,109,0.1);
+          transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .slider-modern::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 2px rgba(122,154,109,0.2);
+        }
+        .slider-modern::-webkit-slider-thumb:active {
+          transform: scale(1.1);
+          background: #7A9A6D;
+          border-color: #7A9A6D;
+        }
+        .slider-modern::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: white;
+          cursor: pointer;
+          border: 2px solid #7A9A6D;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .slider-modern::-moz-range-track {
+          height: 4px;
+          border-radius: 2px;
+          background: #EDE8DF;
+        }
+        .slider-modern::-webkit-slider-runnable-track {
+          height: 4px;
+          border-radius: 2px;
+        }
+      `}</style>
     </div>
   );
 }
