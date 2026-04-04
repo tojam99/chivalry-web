@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useDiscover } from '@/lib/useDiscover';
+import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
+import FilterModal from '@/components/FilterModal';
 import {
   Heart,
   X,
@@ -22,6 +23,7 @@ import {
   Leaf,
   Search,
   Calendar,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -32,7 +34,9 @@ function resolvePhoto(url: string): string {
 }
 
 export default function DiscoverPage() {
-  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover();
+  const [filters, setFilters] = useState<DiscoverFilters>({ showMe: 'Everyone', ageMin: 18, ageMax: 99, maxDistance: 100, verifiedOnly: false, sharedInterests: false });
+  const [showFilters, setShowFilters] = useState(false);
+  const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh } = useDiscover(filters);
   const router = useRouter();
 
   const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
@@ -124,6 +128,13 @@ export default function DiscoverPage() {
         {preloadUrls.map((url) => (
           <img key={url} src={url} alt="" />
         ))}
+      </div>
+
+      {/* Filter button */}
+      <div className="flex justify-end mb-3">
+        <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
+          <SlidersHorizontal className="w-4 h-4" />Filters
+        </button>
       </div>
 
       {/* Card */}
@@ -306,6 +317,9 @@ export default function DiscoverPage() {
           </div>
         </div>
       )}
+
+      <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
+        onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} />
     </>
   );
 }
