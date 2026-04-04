@@ -32,28 +32,46 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
   const { data: { user } } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
 
-  // Protected routes — redirect to login if not authenticated
-  const protectedPaths = ['/discover', '/matches', '/chat', '/dates', '/likes', '/profile'];
-  const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path));
+  // Protected routes
+  const protectedPaths = ['/discover', '/matches', '/chat', '/dates', '/likes', '/profile', '/onboarding'];
+  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
-    url.searchParams.set('redirect', request.nextUrl.pathname);
+    url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 
   // Redirect logged-in users away from auth pages
   const authPaths = ['/auth/login', '/auth/signup'];
-  const isAuthPage = authPaths.some(path => request.nextUrl.pathname.startsWith(path));
+  const isAuthPage = authPaths.some(path => pathname.startsWith(path));
 
   if (isAuthPage && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/discover';
     return NextResponse.redirect(url);
+  }
+
+  // Onboarding check — redirect non-onboarded users to onboarding
+  const mainAppPaths = ['/discover', '/matches', '/chat', '/dates', '/likes', '/profile'];
+  const isMainApp = mainAppPaths.some(path => pathname.startsWith(path));
+
+  if (isMainApp && user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('auth_id', user.id)
+      .single();
+
+    if (profile && !profile.onboarded) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

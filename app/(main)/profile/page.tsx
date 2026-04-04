@@ -198,7 +198,9 @@ export default function ProfilePage() {
 
   async function handleAddIdea() {
     if (!newIdeaTitle.trim() || !newIdeaLocationFull.trim()) return;
-    await addDateIdea(newIdeaTitle.trim(), newIdeaLocationFull.trim());
+    const title = newIdeaTitle.trim();
+    const capitalizedTitle = title.charAt(0).toUpperCase() + title.slice(1);
+    await addDateIdea(capitalizedTitle, newIdeaLocationFull.trim());
     setNewIdeaTitle(''); setNewIdeaLocation(''); setNewIdeaLocationFull(''); setShowAddIdea(false);
   }
 
@@ -230,9 +232,9 @@ export default function ProfilePage() {
       {/* Photos */}
       <div>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2" style={{ gridAutoRows: '1fr' }}>
           {profile.photos.sort((a, b) => a.sort_order - b.sort_order).map((photo, idx) => (
-            <div key={photo.id} className={`relative rounded-xl overflow-hidden group ${idx === 0 ? 'col-span-2 row-span-2 aspect-[3/4]' : 'aspect-square'}`}>
+            <div key={photo.id} className={`relative rounded-xl overflow-hidden group ${idx === 0 ? 'col-span-2 row-span-2' : ''}`} style={{ aspectRatio: idx === 0 ? '3/4' : '1/1' }}>
               <img src={resolvePhoto(photo.photo_url)} alt="" className="w-full h-full object-cover" />
               <button onClick={() => deletePhoto(photo.id)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-white" /></button>
             </div>

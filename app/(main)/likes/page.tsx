@@ -79,7 +79,9 @@ export default function LikesPage() {
   const supabase = createClient();
   const { profile: myProfile, loading: profileLoading } = useProfile();
   const [likes, setLikes] = useState<LikeProfile[]>([]);
+  const [matches, setMatches] = useState<{ match_id: string; id: string; name: string; age: number | null; photo_url: string | null; last_message: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'likes' | 'matches'>('likes');
   const [selectedProfile, setSelectedProfile] = useState<LikeProfile | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [actioning, setActioning] = useState(false);
@@ -173,6 +175,34 @@ export default function LikesPage() {
 
   useEffect(() => { fetchLikes(); }, [fetchLikes]);
 
+  // Fetch matches
+  const fetchMatches = useCallback(async () => {
+    if (!myProfile?.id) return;
+    try {
+      const { data: matchesData } = await supabase.from('matches').select('id, user1_id, user2_id, created_at')
+        .or(`user1_id.eq.${myProfile.id},user2_id.eq.${myProfile.id}`).eq('status', 'active').order('created_at', { ascending: false });
+      if (!matchesData || matchesData.length === 0) { setMatches([]); return; }
+      const otherIds = matchesData.map((m) => m.user1_id === myProfile.id ? m.user2_id : m.user1_id);
+      const [profilesRes, photosRes, msgsRes] = await Promise.all([
+        supabase.from('profiles').select('id, name, age').in('id', otherIds),
+        supabase.from('profile_photos').select('profile_id, photo_url').in('profile_id', otherIds).order('sort_order', { ascending: true }),
+        supabase.from('messages').select('match_id, content, created_at').in('match_id', matchesData.map((m) => m.id)).order('created_at', { ascending: false }),
+      ]);
+      const profilesMap = new Map((profilesRes.data || []).map((p) => [p.id, p]));
+      const photosMap = new Map<string, string>();
+      (photosRes.data || []).forEach((p) => { if (!photosMap.has(p.profile_id)) photosMap.set(p.profile_id, p.photo_url); });
+      const lastMsgMap = new Map<string, string>();
+      (msgsRes.data || []).forEach((m) => { if (!lastMsgMap.has(m.match_id)) lastMsgMap.set(m.match_id, m.content); });
+      setMatches(matchesData.map((m) => {
+        const otherId = m.user1_id === myProfile.id ? m.user2_id : m.user1_id;
+        const p = profilesMap.get(otherId);
+        return { match_id: m.id, id: otherId, name: p?.name || 'Unknown', age: p?.age || null, photo_url: photosMap.get(otherId) || null, last_message: lastMsgMap.get(m.id) || null };
+      }));
+    } catch (err) { console.error('fetchMatches error:', err); }
+  }, [myProfile?.id]);
+
+  useEffect(() => { fetchMatches(); }, [fetchMatches]);
+
   async function handleLikeBack(like: LikeProfile) {
     if (actioning) return;
     setActioning(true);
@@ -224,12 +254,51 @@ export default function LikesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl text-sage-800">Likes</h1>
-        <span className="bg-sage-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-          {likes.length} {likes.length === 1 ? 'person' : 'people'}
-        </span>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-display text-2xl text-sage-800">Likes & Matches</h1>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button onClick={() => setActiveTab('likes')} className={`text-sm font-medium px-4 py-2 rounded-xl transition-colors ${activeTab === 'likes' ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
+          Likes ({likes.length})
+        </button>
+        <button onClick={() => setActiveTab('matches')} className={`text-sm font-medium px-4 py-2 rounded-xl transition-colors ${activeTab === 'matches' ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700 hover:bg-cream-300'}`}>
+          Matches ({matches.length})
+        </button>
+      </div>
+
+      {/* Matches tab */}
+      {activeTab === 'matches' && (
+        <div>
+          {matches.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mb-4"><MessageCircle className="w-8 h-8 text-sage-400" /></div>
+              <h2 className="font-display text-xl text-sage-800 mb-2">No matches yet</h2>
+              <p className="text-cream-700 text-sm max-w-sm">Keep swiping! When you and someone both like each other, you&apos;ll match.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {matches.map((m) => (
+                <button key={m.match_id} onClick={() => router.push(`/matches/${m.match_id}`)}
+                  className="w-full flex items-center gap-3 bg-white border border-cream-200 rounded-2xl p-3 hover:border-sage-300 transition-colors text-left">
+                  <div className="w-14 h-14 rounded-full overflow-hidden shrink-0">
+                    {m.photo_url ? <img src={resolvePhotoUrl(m.photo_url, 120)} alt={m.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-cream-300" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-bold text-sage-800">{m.name}{m.age ? `, ${m.age}` : ''}</p>
+                    <p className="text-xs text-cream-600 truncate">{m.last_message || 'New match! Say hi 👋'}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-cream-500 shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Likes tab */}
+      {activeTab === 'likes' && (<>
 
       {/* Upgrade banner for non-premium */}
       {!isPremium && (
@@ -295,6 +364,8 @@ export default function LikesPage() {
           </div>
         ))}
       </div>
+
+      </>)}
 
       {/* Full profile modal (premium only) */}
       {selectedProfile && isPremium && (
