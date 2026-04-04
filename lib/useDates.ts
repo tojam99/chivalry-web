@@ -21,6 +21,7 @@ export interface DateItem {
     name: string;
     age: number | null;
     photo_url: string | null;
+    available_now: boolean;
   };
   date_ideas: { id: string; title: string; location_name: string }[];
   is_user1: boolean;
@@ -79,18 +80,21 @@ export function useDates() {
         return;
       }
 
-      const otherUserIds = Array.from(new Set(matchesData.map((m) =>
+      const otherUserIds = [...new Set(matchesData.map((m) =>
         m.user1_id === myProfile.id ? m.user2_id : m.user1_id
-      )));
+      ))];
 
       const [profilesResult, photosResult, ideasResult] = await Promise.all([
-        supabase.from('profiles').select('id, name, age').in('id', otherUserIds),
-        supabase.from('profile_photos').select('profile_id, photo_url').in('profile_id', otherUserIds).eq('sort_order', 1),
+        supabase.from('profiles').select('id, name, age, available_now').in('id', otherUserIds),
+        supabase.from('profile_photos').select('profile_id, photo_url').in('profile_id', otherUserIds).order('sort_order', { ascending: true }),
         supabase.from('date_ideas').select('id, profile_id, title, location_name').in('profile_id', otherUserIds),
       ]);
 
       const profilesMap = new Map((profilesResult.data || []).map((p) => [p.id, p]));
-      const photosMap = new Map((photosResult.data || []).map((p) => [p.profile_id, p.photo_url]));
+      const photosMap = new Map<string, string>();
+      (photosResult.data || []).forEach((p) => {
+        if (!photosMap.has(p.profile_id)) photosMap.set(p.profile_id, p.photo_url);
+      });
 
       const ideasByProfile = new Map<string, { id: string; title: string; location_name: string }[]>();
       (ideasResult.data || []).forEach((d) => {
@@ -124,6 +128,7 @@ export function useDates() {
             name: otherProfile?.name || 'Unknown',
             age: otherProfile?.age || null,
             photo_url: photosMap.get(otherUserId) || null,
+            available_now: otherProfile?.available_now || false,
           },
           date_ideas: ideasByProfile.get(otherUserId) || [],
           is_user1: isUser1,
