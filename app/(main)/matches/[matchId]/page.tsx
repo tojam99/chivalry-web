@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useChat } from '@/lib/useChat';
 import { useActions } from '@/lib/useActions';
 import { ActionModal } from '@/components/ActionModal';
-import { createClient } from '@/lib/supabase-browser';
+import ProfileViewModal from '@/components/ProfileViewModal';
 import {
-  ArrowLeft, Send, Calendar, ChevronRight, ChevronLeft, Loader2, Check, CheckCheck,
-  MoreVertical, Heart, MapPin, X, Coffee, Info, ShieldCheck, Leaf, Sparkles, Search,
+  ArrowLeft, Send, Calendar, ChevronRight, Loader2, Check, CheckCheck,
+  MoreVertical, Heart,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -32,192 +32,6 @@ function friendlyStatus(status: string): string {
     pending_confirm: 'Confirm time', confirmed: 'Date confirmed', completed: 'Completed', rated: 'Rated', cancelled: 'Cancelled',
   };
   return map[status] || status.replace(/_/g, ' ');
-}
-
-// Profile view modal — shows the other user's full profile with date request ability
-function ProfileViewModal({ open, onClose, userId, matchId, myProfileId, onDateRequested }: {
-  open: boolean; onClose: () => void; userId: string; matchId: string; myProfileId: string | null;
-  onDateRequested: () => void;
-}) {
-  const supabase = createClient();
-  const [profile, setProfile] = useState<any>(null);
-  const [photos, setPhotos] = useState<{ photo_url: string }[]>([]);
-  const [dateIdeas, setDateIdeas] = useState<{ id: string; title: string; location_name: string }[]>([]);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [photoIdx, setPhotoIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [requesting, setRequesting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open || !userId) return;
-    setLoading(true); setPhotoIdx(0); setSuccessMsg(null);
-    (async () => {
-      const [pRes, phRes, diRes, iRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        supabase.from('profile_photos').select('photo_url, sort_order').eq('profile_id', userId).order('sort_order'),
-        supabase.from('date_ideas').select('id, title, location_name').eq('profile_id', userId),
-        supabase.from('profile_interests').select('interests(name)').eq('profile_id', userId),
-      ]);
-      setProfile(pRes.data);
-      setPhotos(phRes.data || []);
-      setDateIdeas(diRes.data || []);
-      setInterests((iRes.data || []).map((i: any) => i.interests?.name).filter(Boolean));
-      setLoading(false);
-    })();
-  }, [open, userId]);
-
-  async function handleRequestDate(idea: { id: string; title: string; location_name: string }) {
-    if (!myProfileId || requesting) return;
-    setRequesting(true);
-    try {
-      // Check existing active date
-      const { data: existing } = await supabase.from('dates').select('id').eq('match_id', matchId)
-        .in('status', ['pending_pick', 'pending_accept', 'pending_time', 'pending_confirm', 'confirmed']);
-      if (existing && existing.length > 0) {
-        setSuccessMsg('There is already an active date with this person.');
-        setRequesting(false);
-        return;
-      }
-      await supabase.from('dates').insert({
-        match_id: matchId, title: idea.title, location_name: idea.location_name,
-        status: 'pending_accept', proposed_by: myProfileId, proposed_by_name: 'You', waiting_on: userId,
-      });
-      setSuccessMsg(`Date request for "${idea.title}" sent!`);
-      onDateRequested();
-    } catch (err) { console.error(err); setSuccessMsg('Failed to send. Try again.'); }
-    setRequesting(false);
-  }
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start justify-center py-6 px-4">
-        <div className="bg-cream-50 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
-          {/* Close button */}
-          <div className="flex items-center justify-between px-5 pt-5">
-            <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-sage-400 animate-spin" /></div>
-          ) : profile ? (
-            <>
-              {/* Photo */}
-              <div className="relative aspect-[3/4] max-h-[420px] mx-5 mt-3 rounded-2xl overflow-hidden bg-cream-300">
-                {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
-                {photos.length > 1 && (
-                  <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">
-                    {photos.map((_, i) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}
-                  </div>
-                )}
-                {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
-                {photoIdx < photos.length - 1 && (<button onClick={() => setPhotoIdx(photoIdx + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3">
-                  <h2 className="text-white font-display text-2xl">{profile.name}, {profile.age}</h2>
-                  {profile.city && <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5"><MapPin className="w-3 h-3" /><span>{profile.city}</span></div>}
-                </div>
-              </div>
-
-              <div className="px-5 pb-6 space-y-4 mt-4">
-                {/* Success message */}
-                {successMsg && (
-                  <div className="bg-sage-100 border border-sage-200 text-sage-700 text-sm font-medium px-4 py-3 rounded-xl text-center">{successMsg}</div>
-                )}
-
-                {/* Bio */}
-                {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
-
-                {/* Request a Date */}
-                {dateIdeas.length > 0 && !successMsg && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Request a Date</p></div>
-                    <div className="space-y-2">
-                      {dateIdeas.map((idea) => (
-                        <button key={idea.id} onClick={() => handleRequestDate(idea)} disabled={requesting}
-                          className="w-full flex items-center gap-3 bg-sage-400 rounded-xl p-3 text-left hover:bg-sage-500 transition-colors disabled:opacity-50">
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-white">{idea.title}</p>
-                            {idea.location_name && <p className="text-xs text-white/70">{idea.location_name}</p>}
-                          </div>
-                          <Calendar className="w-4 h-4 text-white/60 shrink-0" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Basic Info */}
-                {(profile.identification || profile.profession || profile.education || profile.height || profile.body_type || profile.ethnicity || profile.religion) && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
-                    <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                      {[
-                        { label: 'Identification', value: profile.identification },
-                        { label: 'Profession', value: profile.profession },
-                        { label: 'Education', value: profile.education },
-                        { label: 'Height', value: profile.height },
-                        { label: 'Body Type', value: profile.body_type },
-                        { label: 'Ethnicity', value: profile.ethnicity },
-                        { label: 'Religion', value: profile.religion },
-                      ].filter((r) => r.value).map((r) => (
-                        <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm text-cream-600">{r.label}</span>
-                          <span className="text-sm font-medium text-sage-800">{r.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Lifestyle */}
-                {(profile.drinking || profile.smoking || profile.workout || profile.children) && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
-                    <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                      {[
-                        { label: 'Drinking', value: profile.drinking },
-                        { label: 'Smoking', value: profile.smoking },
-                        { label: 'Workout', value: profile.workout },
-                        { label: 'Children', value: profile.children },
-                      ].filter((r) => r.value).map((r) => (
-                        <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-                          <span className="text-sm text-cream-600">{r.label}</span>
-                          <span className="text-sm font-medium text-sage-800">{r.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Interests */}
-                {interests.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {interests.map((i, idx) => (<span key={idx} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{i}</span>))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Looking For */}
-                {profile.looking_for && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
-                    <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{profile.looking_for}</div>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="py-20 text-center text-cream-600">Profile not found</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function ChatPage() {

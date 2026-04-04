@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDates, type DateItem } from '@/lib/useDates';
 import { createClient } from '@/lib/supabase-browser';
+import ProfileViewModal from '@/components/ProfileViewModal';
 import {
   Calendar, MapPin, Clock, Star, Loader2, ChevronRight, ChevronLeft, CheckCircle2,
   XCircle, Hand, Hourglass, X, Check, MessageCircle, Heart, Info, ShieldCheck, Leaf, Sparkles, Search,
@@ -295,89 +296,6 @@ function CompletedCard({ date, onViewProfile }: { date: DateItem; onViewProfile:
   );
 }
 
-// ── Profile View Modal ──
-function ProfileModal({ userId, onClose }: { userId: string; onClose: () => void }) {
-  const supabase = createClient();
-  const [profile, setProfile] = useState<any>(null);
-  const [photos, setPhotos] = useState<{ photo_url: string }[]>([]);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [photoIdx, setPhotoIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true); setPhotoIdx(0);
-    (async () => {
-      const [pRes, phRes, iRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        supabase.from('profile_photos').select('photo_url, sort_order').eq('profile_id', userId).order('sort_order'),
-        supabase.from('profile_interests').select('interests(name)').eq('profile_id', userId),
-      ]);
-      setProfile(pRes.data); setPhotos(phRes.data || []);
-      setInterests((iRes.data || []).map((i: any) => i.interests?.name).filter(Boolean));
-      setLoading(false);
-    })();
-  }, [userId]);
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-full flex items-start justify-center py-6 px-4">
-        <div className="bg-cream-50 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between px-5 pt-5">
-            <button onClick={onClose} className="text-cream-600 hover:text-sage-800"><X className="w-6 h-6" /></button>
-          </div>
-          {loading ? (<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-sage-400 animate-spin" /></div>) : profile ? (
-            <>
-              <div className="relative aspect-[3/4] max-h-[420px] mx-5 mt-3 rounded-2xl overflow-hidden bg-cream-300">
-                {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
-                {photos.length > 1 && (<div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4">{photos.map((_: any, i: number) => (<div key={i} className={`h-1 rounded-full flex-1 max-w-12 ${i === photoIdx ? 'bg-white' : 'bg-white/40'}`} />))}</div>)}
-                {photoIdx > 0 && (<button onClick={() => setPhotoIdx(photoIdx-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronLeft className="w-4 h-4" /></button>)}
-                {photoIdx < photos.length-1 && (<button onClick={() => setPhotoIdx(photoIdx+1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white"><ChevronRight className="w-4 h-4" /></button>)}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-3 left-3"><h2 className="text-white font-display text-2xl">{profile.name}, {profile.age}</h2>{profile.city && <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5"><MapPin className="w-3 h-3" />{profile.city}</div>}</div>
-              </div>
-              <div className="px-5 pb-6 space-y-4 mt-4">
-                {profile.bio && <p className="text-sage-800 text-[15px] leading-relaxed">{profile.bio}</p>}
-                {(profile.identification || profile.profession || profile.education || profile.height || profile.body_type || profile.ethnicity || profile.religion) && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Info className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Basic info</p></div>
-                    <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                      {[{label:'Identification',value:profile.identification},{label:'Profession',value:profile.profession},{label:'Education',value:profile.education},{label:'Height',value:profile.height},{label:'Body Type',value:profile.body_type},{label:'Ethnicity',value:profile.ethnicity},{label:'Religion',value:profile.religion}].filter((r:any)=>r.value).map((r:any)=>(
-                        <div key={r.label} className="flex items-center justify-between px-4 py-2.5"><span className="text-sm text-cream-600">{r.label}</span><span className="text-sm font-medium text-sage-800">{r.value}</span></div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {(profile.drinking||profile.smoking||profile.workout||profile.children) && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Leaf className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Lifestyle</p></div>
-                    <div className="bg-cream-100 rounded-xl divide-y divide-cream-200">
-                      {[{label:'Drinking',value:profile.drinking},{label:'Smoking',value:profile.smoking},{label:'Workout',value:profile.workout},{label:'Children',value:profile.children}].filter((r:any)=>r.value).map((r:any)=>(
-                        <div key={r.label} className="flex items-center justify-between px-4 py-2.5"><span className="text-sm text-cream-600">{r.label}</span><span className="text-sm font-medium text-sage-800">{r.value}</span></div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {interests.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Interests</p></div>
-                    <div className="flex flex-wrap gap-1.5">{interests.map((i,idx)=>(<span key={idx} className="bg-sage-100 text-sage-600 text-xs font-medium px-3 py-1.5 rounded-lg">{i}</span>))}</div>
-                  </div>
-                )}
-                {profile.looking_for && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2"><Search className="w-4 h-4 text-sage-400" /><p className="text-xs font-medium text-cream-600 uppercase tracking-wide">Looking for</p></div>
-                    <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-600 text-sm font-medium px-4 py-2 rounded-xl"><Heart className="w-4 h-4" />{profile.looking_for}</div>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (<div className="py-20 text-center text-cream-600">Profile not found</div>)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ═══ MAIN PAGE ═══
 export default function DatesPage() {
   const {
@@ -460,7 +378,7 @@ export default function DatesPage() {
       </>)}
 
       <ConfirmModal open={confirmModal.open} title={confirmModal.title} message={confirmModal.message} confirmText={confirmModal.confirmText} confirmColor={confirmModal.confirmColor} onConfirm={confirmModal.onConfirm} onClose={()=>setConfirmModal((p)=>({...p,open:false}))}/>
-      {viewProfileId && <ProfileModal userId={viewProfileId} onClose={()=>setViewProfileId(null)}/>}
+      {viewProfileId && <ProfileViewModal open={true} userId={viewProfileId} onClose={()=>setViewProfileId(null)}/>}
     </div>
   );
 }
