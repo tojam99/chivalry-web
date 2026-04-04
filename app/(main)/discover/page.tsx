@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
 import { createClient } from '@/lib/supabase-browser';
@@ -30,6 +31,14 @@ export default function DiscoverPage() {
   const [lastSwiped, setLastSwiped] = useState<{ id: string; direction: string } | null>(null);
   const [swipeAnimation, setSwipeAnimation] = useState<'left' | 'right' | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState(false);
+  const [headerMount, setHeaderMount] = useState<HTMLElement | null>(null);
+
+  // Mount filter button into mobile header
+  useEffect(() => {
+    const el = document.getElementById('mobile-header-action');
+    if (el) setHeaderMount(el);
+    return () => { if (el) el.innerHTML = ''; };
+  }, []);
 
   // Date request state
   const [dateCredits, setDateCredits] = useState(0);
@@ -253,8 +262,8 @@ export default function DiscoverPage() {
         {preloadUrls.map((url) => (<img key={url} src={url} alt="" />))}
       </div>
 
-      {/* Filter button */}
-      <div className="flex justify-end mb-3">
+      {/* Desktop filter button — hidden on mobile since it's in the header */}
+      <div className="hidden md:flex justify-end mb-3">
         <button onClick={() => setShowFilters(true)} className="flex items-center gap-1.5 text-sm text-cream-600 hover:text-sage-600 bg-cream-200 px-3 py-1.5 rounded-xl hover:bg-cream-300 transition-colors">
           <SlidersHorizontal className="w-4 h-4" />Filters
         </button>
@@ -280,11 +289,6 @@ export default function DiscoverPage() {
           )}
           {photoIndex > 0 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex - 1); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronLeft className="w-4 h-4" /></button>)}
           {photoIndex < photos.length - 1 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex + 1); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronRight className="w-4 h-4" /></button>)}
-          {/* Expand icon */}
-          <button onClick={(e) => { e.stopPropagation(); setExpandedPhoto(true); }}
-            className="absolute top-3 right-3 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors">
-            <Maximize2 className="w-4 h-4" />
-          </button>
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
@@ -568,6 +572,15 @@ export default function DiscoverPage() {
 
       <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
         onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} />
+
+      {/* Mobile: render filter into header via portal */}
+      {headerMount && createPortal(
+        <button onClick={() => setShowFilters(true)}
+          className="w-9 h-9 bg-cream-200 rounded-lg flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
+          <SlidersHorizontal className="w-4 h-4" />
+        </button>,
+        headerMount
+      )}
     </>
   );
 }

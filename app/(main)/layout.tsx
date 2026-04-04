@@ -98,12 +98,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
           <span className="font-bold text-lg text-sage-800">Chivalry</span>
         </Link>
-        <button
-          onClick={handleSignOut}
-          className="text-cream-600 hover:text-sage-600 transition-colors p-2"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        {/* Filter button — only on discover page, other pages show nothing */}
+        <div id="mobile-header-action" />
       </header>
 
       {/* Main content — only this area scrolls */}
