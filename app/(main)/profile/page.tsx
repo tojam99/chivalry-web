@@ -156,7 +156,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
 }
 
 export default function ProfilePage() {
-  const { profile, loading, updateField, addDateIdea, deleteDateIdea, toggleInterest, uploadPhoto, deletePhoto, signOut } = useProfile();
+  const { profile, setProfile, loading, updateField, addDateIdea, deleteDateIdea, toggleInterest, uploadPhoto, deletePhoto, signOut } = useProfile();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,14 +183,14 @@ export default function ProfilePage() {
     const sorted = [...profile.photos].sort((a, b) => a.sort_order - b.sort_order);
     const [moved] = sorted.splice(fromIdx, 1);
     sorted.splice(toIdx, 0, moved);
+    // Re-index and update local state immediately
+    const reindexed = sorted.map((p, i) => ({ ...p, sort_order: i }));
+    setProfile((prev) => prev ? { ...prev, photos: reindexed } : prev);
+    // Persist to DB
     const supabase = createClient();
-    for (let i = 0; i < sorted.length; i++) {
-      if (sorted[i].sort_order !== i) {
-        await supabase.from('profile_photos').update({ sort_order: i }).eq('id', sorted[i].id);
-      }
+    for (const p of reindexed) {
+      await supabase.from('profile_photos').update({ sort_order: p.sort_order }).eq('id', p.id);
     }
-    // Force refresh by updating a harmless field
-    updateField('updated_at', new Date().toISOString());
   }
 
   function onDragStart(e: React.DragEvent, idx: number) {
