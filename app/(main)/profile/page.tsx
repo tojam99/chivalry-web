@@ -82,27 +82,16 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-black/50 md:backdrop-blur-sm overflow-y-auto" style={{ height: '100dvh' }}>
-      {/* Mobile: full screen / Desktop: centered card */}
-      <div className="min-h-full md:flex md:items-start md:justify-center md:py-8 md:px-4">
-        <div className="bg-cream-50 w-full md:max-w-lg md:rounded-3xl md:overflow-hidden md:shadow-2xl min-h-full md:min-h-0">
-          {/* Mobile top bar — covers the nav bleed */}
-          <div className="md:hidden bg-cream-50 flex items-center px-4 py-2 pt-[max(env(safe-area-inset-top,0px),12px)]" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}>
-            <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="flex-1 text-center text-sm font-bold text-sage-800 -ml-9">Profile Preview</span>
-          </div>
-          {/* Desktop header — hidden on mobile */}
-          <div className="hidden md:flex items-center justify-between px-5 pt-4 pb-2">
-            <button onClick={onClose} className="w-8 h-8 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 hover:text-sage-800 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <span className="text-sm text-sage-800 font-bold">Profile Preview</span>
-            <div className="w-8" />
-          </div>
-          {/* Photo */}
-          <div className="relative w-full h-[50vh] md:h-[420px] min-h-[300px] max-h-[520px] bg-cream-300">
+    <div className="-mx-4 -mt-6 -mb-6 min-h-screen bg-cream-50">
+      {/* Header bar */}
+      <div className="bg-cream-50 flex items-center px-4 py-3">
+        <button onClick={onClose} className="w-9 h-9 bg-cream-200 rounded-full flex items-center justify-center text-cream-700 hover:bg-cream-300 transition-colors">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="flex-1 text-center text-sm font-bold text-sage-800 -ml-9">Profile Preview</span>
+      </div>
+      {/* Photo */}
+      <div className="relative w-full h-[55vh] min-h-[320px] max-h-[520px] bg-cream-300">
             {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
             {photos.length > 1 && (
               <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-4 pt-[env(safe-area-inset-top)]">
@@ -183,8 +172,6 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
           Back to Profile
         </button>
       </div>
-      </div>{/* end card */}
-      </div>{/* end flex wrapper */}
     </div>
   );
 }
@@ -309,6 +296,11 @@ export default function ProfilePage() {
 
   if (loading || !profile) {
     return (<div className="flex flex-col items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 text-sage-400 animate-spin mb-4" /><p className="text-cream-700">Loading profile...</p></div>);
+  }
+
+  // Full-page preview — replaces entire page content so no nav bar bleeds through
+  if (showPreview) {
+    return <ProfilePreview profile={profile} photos={profile.photos} interests={profile.interests} dateIdeas={profile.date_ideas} onClose={() => setShowPreview(false)} />;
   }
 
   return (
@@ -725,8 +717,7 @@ export default function ProfilePage() {
         placeholder="Search for a venue..."
         onSelect={(place) => { setNewIdeaLocation(place.name); setNewIdeaLocationFull(`${place.name} · ${place.address}`); }} />
 
-      {/* Profile Preview */}
-      {showPreview && <ProfilePreview profile={profile} photos={profile.photos} interests={profile.interests} dateIdeas={profile.date_ideas} onClose={() => setShowPreview(false)} />}
+      {/* Preview is now rendered via early return above, not here */}
 
       {/* Custom styles */}
       <style jsx global>{`
