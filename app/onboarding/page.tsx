@@ -259,10 +259,12 @@ export default function OnboardingPage() {
       for (const interestName of selectedInterests) {
         const interest = allInterests.find((i) => i.name === interestName);
         if (interest) {
-          await supabase.from('profile_interests').upsert(
-            { profile_id: profileId, interest_id: interest.id },
-            { onConflict: 'profile_id,interest_id' }
-          ).catch((e) => console.error('Interest save error:', e));
+          try {
+            await supabase.from('profile_interests').upsert(
+              { profile_id: profileId, interest_id: interest.id },
+              { onConflict: 'profile_id,interest_id' }
+            );
+          } catch (e) { console.error('Interest save error:', e); }
         }
       }
 
