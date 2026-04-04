@@ -8,7 +8,7 @@ import PlacePicker from '@/components/PlacePicker';
 import {
   MapPin, Briefcase, GraduationCap, Ruler, Heart, Coffee, Plus, LogOut, X,
   Camera, Trash2, ChevronRight, ChevronLeft, Loader2, Check, Zap, Edit3, Eye,
-  Info, Leaf, Sparkles, Search, ShieldCheck, Star,
+  Info, Leaf, Sparkles, Search, ShieldCheck, Star, GripVertical,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -172,6 +172,71 @@ export default function ProfilePage() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showIdeaLocationPicker, setShowIdeaLocationPicker] = useState(false);
 
+  // ── Photo drag & drop ──
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ idx: number; startY: number; startX: number } | null>(null);
+
+  async function handleReorderPhotos(fromIdx: number, toIdx: number) {
+    if (!profile || fromIdx === toIdx || toIdx < 0 || toIdx >= profile.photos.length) return;
+    const sorted = [...profile.photos].sort((a, b) => a.sort_order - b.sort_order);
+    const [moved] = sorted.splice(fromIdx, 1);
+    sorted.splice(toIdx, 0, moved);
+    const supabase = createClient();
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i].sort_order !== i) {
+        await supabase.from('profile_photos').update({ sort_order: i }).eq('id', sorted[i].id);
+      }
+    }
+    // Force refresh by updating a harmless field
+    updateField('updated_at', new Date().toISOString());
+  }
+
+  function onDragStart(e: React.DragEvent, idx: number) {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function onDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (profile && idx < profile.photos.length) setDragOverIdx(idx);
+  }
+  function onDragEnd() {
+    if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+      handleReorderPhotos(dragIdx, dragOverIdx);
+    }
+    setDragIdx(null);
+    setDragOverIdx(null);
+  }
+  function onTouchStartPhoto(idx: number, e: React.TouchEvent) {
+    const touch = e.touches[0];
+    touchStartRef.current = { idx, startX: touch.clientX, startY: touch.clientY };
+    const timer = setTimeout(() => setDragIdx(idx), 200);
+    (e.currentTarget as any)._dragTimer = timer;
+  }
+  function onTouchMovePhoto(e: React.TouchEvent) {
+    if (dragIdx === null || !gridRef.current) return;
+    const touch = e.touches[0];
+    const elements = gridRef.current.querySelectorAll('[data-photo-idx]');
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        const idx = parseInt(el.getAttribute('data-photo-idx') || '-1');
+        if (profile && idx >= 0 && idx < profile.photos.length) setDragOverIdx(idx);
+      }
+    });
+  }
+  function onTouchEndPhoto(e: React.TouchEvent) {
+    clearTimeout((e.currentTarget as any)._dragTimer);
+    if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+      handleReorderPhotos(dragIdx, dragOverIdx);
+    }
+    setDragIdx(null);
+    setDragOverIdx(null);
+    touchStartRef.current = null;
+  }
+
   useEffect(() => {
     const supabase = createClient();
     supabase.from('interests').select('name').order('name').then(({ data }) => setAllInterests((data || []).map((i) => i.name)));
@@ -237,28 +302,47 @@ export default function ProfilePage() {
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
         {(() => {
           const sorted = [...profile.photos].sort((a, b) => a.sort_order - b.sort_order);
+          const isDragging = (i: number) => dragIdx === i;
+          const isDragOver = (i: number) => dragOverIdx === i && dragIdx !== i;
+
           function photoCell(idx: number) {
             const photo = sorted[idx];
             if (photo) {
               return (
-                <div key={photo.id} className="relative w-full h-full rounded-xl overflow-hidden bg-cream-300 group">
-                  <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <button onClick={() => deletePhoto(photo.id)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-white" /></button>
-                  {idx === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Main</div>}
+                <div
+                  key={photo.id}
+                  data-photo-idx={idx}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, idx)}
+                  onDragOver={(e) => onDragOver(e, idx)}
+                  onDragEnd={onDragEnd}
+                  onTouchStart={(e) => onTouchStartPhoto(idx, e)}
+                  onTouchMove={onTouchMovePhoto}
+                  onTouchEnd={onTouchEndPhoto}
+                  className={`relative w-full h-full rounded-xl overflow-hidden bg-cream-300 group cursor-grab active:cursor-grabbing transition-all duration-150 ${
+                    isDragging(idx) ? 'opacity-40 scale-95' : ''
+                  } ${isDragOver(idx) ? 'ring-2 ring-sage-400 ring-offset-2 scale-[1.02]' : ''}`}
+                >
+                  <img src={resolvePhoto(photo.photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                  <div className="absolute top-2 left-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <GripVertical className="w-3 h-3 text-white" />
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); deletePhoto(photo.id); }} className="absolute top-2 right-2 w-7 h-7 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 className="w-3.5 h-3.5 text-white" /></button>
+                  {idx === 0 && <div className="absolute bottom-2 left-2 bg-sage-400/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide z-10">Main</div>}
                 </div>
               );
             } else if (idx === sorted.length && sorted.length < 6) {
               return (
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                <button data-photo-idx={idx} onClick={() => fileInputRef.current?.click()} disabled={uploading}
                   className="w-full h-full rounded-xl bg-cream-200 border-2 border-dashed border-cream-400 flex flex-col items-center justify-center hover:border-sage-400 hover:bg-cream-100 transition-colors">
                   {uploading ? <Loader2 className="w-6 h-6 text-cream-600 animate-spin" /> : <><Camera className="w-5 h-5 text-cream-500" /><span className="text-[10px] text-cream-500 mt-1">Add</span></>}
                 </button>
               );
             }
-            return <div className="w-full h-full rounded-xl bg-cream-100 border border-cream-200" />;
+            return <div data-photo-idx={idx} className="w-full h-full rounded-xl bg-cream-100 border border-cream-200" />;
           }
           return (
-            <div className="space-y-2">
+            <div ref={gridRef} className="space-y-2">
               {/* Top row: main photo (2/3) + 2 stacked (1/3) */}
               <div className="flex gap-2" style={{ height: '260px' }}>
                 <div className="flex-[2] min-w-0 relative overflow-hidden rounded-xl">
