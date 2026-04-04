@@ -80,9 +80,9 @@ export function useDates() {
         return;
       }
 
-      const otherUserIds = [...new Set(matchesData.map((m) =>
+      const otherUserIds = Array.from(new Set(matchesData.map((m) =>
         m.user1_id === myProfile.id ? m.user2_id : m.user1_id
-      ))];
+      )));
 
       const [profilesResult, photosResult, ideasResult] = await Promise.all([
         supabase.from('profiles').select('id, name, age, available_now').in('id', otherUserIds),
