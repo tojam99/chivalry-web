@@ -82,7 +82,7 @@ function ProfilePreview({ profile, photos, interests, dateIdeas, onClose }: {
 }) {
   const [photoIdx, setPhotoIdx] = useState(0);
   return (
-    <div className="fixed inset-0 z-[100] bg-cream-50 overflow-y-auto">
+    <div className="fixed top-0 left-0 right-0 bottom-0 z-[9999] bg-cream-50 overflow-y-auto" style={{ height: '100dvh' }}>
       {/* Full-width photo */}
       <div className="relative w-full h-[55vh] min-h-[320px] max-h-[520px] bg-cream-300">
         {photos[photoIdx] && (<img src={resolvePhoto(photos[photoIdx].photo_url)} alt="" className="absolute inset-0 w-full h-full object-cover" />)}
