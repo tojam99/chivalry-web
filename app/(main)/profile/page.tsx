@@ -9,6 +9,7 @@ import {
   MapPin, Briefcase, GraduationCap, Ruler, Heart, Coffee, Plus, LogOut, X,
   Camera, Trash2, ChevronRight, ChevronLeft, Loader2, Check, Zap, Edit3, Eye,
   Info, Leaf, Sparkles, Search, ShieldCheck, Star, GripVertical,
+  EyeOff, Plane, StarOff, CreditCard, Bell, User, Globe, Lock, FileText, HelpCircle, Diamond,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -495,39 +496,180 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Discovery Settings */}
+      {/* ══════════════ Verification ══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <ShieldCheck className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Verification</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden">
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${profile.verified ? 'bg-green-100' : 'bg-cream-200'}`}>
+              <ShieldCheck className={`w-5 h-5 ${profile.verified ? 'text-green-500' : 'text-cream-500'}`} />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-sage-800">{profile.verified ? 'Verified' : 'Not Verified'}</p>
+              <p className="text-xs text-cream-600">{profile.verified ? 'Your profile is verified' : 'Verify to build trust'}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-cream-500" />
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════ Premium Features ══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Diamond className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Premium Features</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          {/* Incognito Mode */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
+              <EyeOff className="w-5 h-5 text-cream-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-sage-800">Incognito Mode</p>
+              <p className="text-xs text-cream-600">Hide your profile from discover</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={!profile.is_active} onChange={(e) => updateField('is_active', !e.target.checked)} />
+              <div className="w-11 h-6 bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-400"></div>
+            </label>
+          </div>
+          {/* Travel Mode */}
+          <button onClick={() => setShowCityPicker(true)} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
+              <Plane className="w-5 h-5 text-cream-600" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-sage-800">Travel Mode</p>
+              <p className="text-xs text-sage-400">{profile.city || 'Set your location'}</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-cream-500" />
+          </button>
+          {/* Hide My Ratings */}
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
+              <StarOff className="w-5 h-5 text-cream-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-sage-800">Hide My Ratings</p>
+              <p className="text-xs text-cream-600">Others won&apos;t see your date ratings</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={false} onChange={() => {}} />
+              <div className="w-11 h-6 bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-400"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════ Subscription & Credits ══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <CreditCard className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Subscription &amp; Credits</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <div className="w-10 h-10 bg-sage-100 rounded-xl flex items-center justify-center">
+              <Diamond className="w-5 h-5 text-sage-500" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-sage-800">{profile.premium ? 'Premium Member' : 'Free Plan'}</p>
+              <p className="text-xs text-sage-400">{profile.premium ? 'Active subscription' : 'Upgrade for more features'}</p>
+            </div>
+            <span className="text-xs font-medium text-sage-400">{profile.premium ? 'Manage' : 'Upgrade'}</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <div className="w-10 h-10 bg-gold-400/20 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-gold-600" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-sage-800">Date Request Credits</p>
+              <p className="text-xs text-cream-600">0 credits remaining</p>
+            </div>
+            <span className="text-xs font-medium text-sage-400">Get More</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ══════════════ Discovery Settings ══════════════ */}
       <div>
         <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Discovery settings</label>
         <div className="space-y-1">
           <DropdownField label="Show me" value={profile.show_me} options={SHOW_ME_OPTIONS} onChange={(v) => updateField('show_me', v)} />
           <div className="px-4 py-3 bg-cream-100 rounded-xl">
-            <div className="flex justify-between text-sm mb-2"><span className="text-cream-600">Age range</span><span className="font-medium text-sage-800">{profile.age_min} - {profile.age_max}</span></div>
-            <div className="flex gap-3 items-center">
-              <input type="range" min={18} max={65} value={profile.age_min} onChange={(e) => updateField('age_min', parseInt(e.target.value))} className="flex-1 accent-sage-400" />
-              <input type="range" min={18} max={65} value={profile.age_max} onChange={(e) => updateField('age_max', parseInt(e.target.value))} className="flex-1 accent-sage-400" />
+            <div className="flex justify-between text-sm mb-3"><span className="text-cream-600">Age range</span><span className="font-medium text-sage-800">{profile.age_min} - {profile.age_max}</span></div>
+            <div className="flex gap-4 items-center">
+              <input type="range" min={18} max={65} value={profile.age_min} onChange={(e) => updateField('age_min', parseInt(e.target.value))} className="flex-1 slider-sage" />
+              <input type="range" min={18} max={65} value={profile.age_max} onChange={(e) => updateField('age_max', parseInt(e.target.value))} className="flex-1 slider-sage" />
             </div>
           </div>
           <div className="px-4 py-3 bg-cream-100 rounded-xl">
-            <div className="flex justify-between text-sm mb-2"><span className="text-cream-600">Max distance</span><span className="font-medium text-sage-800">{profile.max_distance} mi</span></div>
-            <input type="range" min={1} max={100} value={profile.max_distance} onChange={(e) => updateField('max_distance', parseInt(e.target.value))} className="w-full accent-sage-400" />
+            <div className="flex justify-between text-sm mb-3"><span className="text-cream-600">Max distance</span><span className="font-medium text-sage-800">{profile.max_distance} mi</span></div>
+            <input type="range" min={1} max={100} value={profile.max_distance} onChange={(e) => updateField('max_distance', parseInt(e.target.value))} className="w-full slider-sage" />
           </div>
         </div>
       </div>
 
-      {/* Support links */}
-      <div className="border-t border-cream-200 pt-6 space-y-1">
-        {[{href:'/support',label:'Support'},{href:'/privacy',label:'Privacy Policy'},{href:'/terms',label:'Terms of Service'},{href:'/safety',label:'Safety'}].map((link)=>(
-          <a key={link.href} href={link.href} className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors"><span className="text-sm font-medium text-sage-800">{link.label}</span><ChevronRight className="w-4 h-4 text-cream-500" /></a>
-        ))}
-        <a href="/delete" className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors"><span className="text-sm font-medium text-red-400">Delete Account</span><ChevronRight className="w-4 h-4 text-cream-500" /></a>
+      {/* ══════════════ General ══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Info className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">General</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <Bell className="w-5 h-5 text-cream-600" />
+            <span className="flex-1 text-left text-sm font-medium text-sage-800">Notifications</span>
+            <ChevronRight className="w-4 h-4 text-cream-500" />
+          </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+            <User className="w-5 h-5 text-cream-600" />
+            <span className="flex-1 text-left text-sm font-medium text-sage-800">Account</span>
+            <ChevronRight className="w-4 h-4 text-cream-500" />
+          </button>
+        </div>
       </div>
 
-      {/* Sign Out */}
-      <div className="border-t border-cream-200 pt-4">
-        <button onClick={handleSignOut} className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-cream-100 transition-colors">
-          <span className="flex items-center gap-3 text-red-500 text-sm font-medium"><LogOut className="w-4 h-4" />Sign out</span>
-          <ChevronRight className="w-4 h-4 text-cream-500" />
+      {/* ══════════════ Support ══════════════ */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Globe className="w-5 h-5 text-sage-400" />
+          <h3 className="text-base font-bold text-sage-800">Support</h3>
+        </div>
+        <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
+          {[
+            { href: '/privacy', label: 'Privacy Policy', icon: Lock },
+            { href: '/terms', label: 'Terms of Service', icon: FileText },
+            { href: '/support', label: 'Help & Support', icon: HelpCircle },
+          ].map((link) => (
+            <a key={link.href} href={link.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+              <link.icon className="w-5 h-5 text-cream-600" />
+              <span className="flex-1 text-sm font-medium text-sage-800">{link.label}</span>
+              <ChevronRight className="w-4 h-4 text-cream-500" />
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════ Log Out & Delete ══════════════ */}
+      <div className="space-y-3 pt-2">
+        <button onClick={handleSignOut}
+          className="w-full flex items-center justify-center gap-2 bg-cream-100 text-cream-700 font-medium py-3.5 rounded-2xl hover:bg-cream-200 transition-colors">
+          <LogOut className="w-4 h-4" />Log out
         </button>
+        <a href="/delete" className="block text-center text-sm text-cream-500 hover:text-red-400 transition-colors py-2">
+          Delete account
+        </a>
+      </div>
+
+      {/* ══════════════ Footer ══════════════ */}
+      <div className="text-center py-6 space-y-1">
+        <p className="text-cream-400 text-sm font-medium">Chivalry</p>
+        <p className="text-cream-400 text-xs">Made with respect</p>
       </div>
 
       {/* City Picker */}
@@ -542,6 +684,46 @@ export default function ProfilePage() {
 
       {/* Profile Preview */}
       {showPreview && <ProfilePreview profile={profile} photos={profile.photos} interests={profile.interests} dateIdeas={profile.date_ideas} onClose={() => setShowPreview(false)} />}
+
+      {/* Modern slider styles */}
+      <style jsx global>{`
+        .slider-sage {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 6px;
+          border-radius: 3px;
+          background: #EDE8DF;
+          outline: none;
+        }
+        .slider-sage::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #7A9A6D;
+          cursor: pointer;
+          border: 3px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+          transition: transform 0.15s;
+        }
+        .slider-sage::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+        }
+        .slider-sage::-moz-range-thumb {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #7A9A6D;
+          cursor: pointer;
+          border: 3px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+        .slider-sage::-webkit-slider-runnable-track {
+          height: 6px;
+          border-radius: 3px;
+        }
+      `}</style>
     </div>
   );
 }
