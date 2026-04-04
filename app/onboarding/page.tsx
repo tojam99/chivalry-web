@@ -63,10 +63,10 @@ export default function OnboardingPage() {
   const [showBuildingModal, setShowBuildingModal] = useState(false);
   const [buildingStep, setBuildingStep] = useState(0);
   const buildingMessages = [
-    { icon: Camera, text: 'Setting up your photos...' },
+    { icon: Camera, text: 'Uploading your photos...' },
     { icon: Heart, text: 'Saving your preferences...' },
-    { icon: Sparkles, text: 'Building your profile...' },
-    { icon: Shield, text: 'Almost ready...' },
+    { icon: Sparkles, text: 'Personalizing your experience...' },
+    { icon: Shield, text: 'Please stand by...' },
   ];
 
   // Load profile data and interests
