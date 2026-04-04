@@ -533,7 +533,7 @@ export default function ProfilePage() {
               <p className="text-xs text-cream-600">Hide your profile from discover</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={!profile.is_active} onChange={(e) => updateField('is_active', !e.target.checked)} />
+              <input type="checkbox" className="sr-only peer" checked={!(profile as any).is_active} onChange={(e) => updateField('is_active', !e.target.checked)} />
               <div className="w-11 h-6 bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-400"></div>
             </label>
           </div>
