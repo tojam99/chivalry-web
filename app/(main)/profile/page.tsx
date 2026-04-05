@@ -737,8 +737,9 @@ export default function ProfilePage() {
 
       {/* Upgrade to Premium Modal */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4" style={{ height: '100dvh' }}>
-          <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-50 md:bg-black/50 md:backdrop-blur-sm flex items-center justify-center px-4" style={{ height: '100dvh' }}>
+          <div onClick={() => setShowUpgradeModal(false)} className="absolute inset-0" />
+          <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl relative z-10 border border-cream-300">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Diamond className="w-8 h-8 text-sage-400" />
