@@ -5,6 +5,10 @@ import AuthRedirect from '@/components/AuthRedirect';
 export const metadata: Metadata = {
   title: 'Chivalry — Putting dates back into dating',
   description: 'A dating app that focuses on real dates, not endless swiping. Plan actual dates with real people in your city.',
+   icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   metadataBase: new URL('https://chivalry.date'),
   openGraph: {
     title: 'Chivalry — Putting dates back into dating',
