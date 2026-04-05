@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { sendEmailNotification } from './sendEmailNotification';
 
 export interface ChatMessage {
   id: string;
@@ -169,10 +170,13 @@ export function useChat(matchId: string) {
     };
   }, [matchId, myProfileId]);
 
+
   // Send message
   const sendMessage = useCallback(
     async (content: string) => {
       if (!myProfileId || !content.trim()) return;
+
+      const isFirstMessage = messages.length === 0;
 
       const { data, error } = await supabase
         .from('messages')
@@ -189,9 +193,27 @@ export function useChat(matchId: string) {
         return null;
       }
 
+      // Send email on first message only
+      if (isFirstMessage && data && matchInfo) {
+        try {
+          const { data: myProfile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', myProfileId)
+            .single();
+          sendEmailNotification({
+            type: 'first_message',
+            recipientProfileId: matchInfo.other_user.id,
+            senderName: myProfile?.name || 'Someone',
+          });
+        } catch (emailErr) {
+          console.error('First message email error:', emailErr);
+        }
+      }
+
       return data;
     },
-    [matchId, myProfileId]
+    [matchId, myProfileId, messages.length, matchInfo]
   );
 
   return { messages, matchInfo, myProfileId, loading, sendMessage, refresh: fetchChat };

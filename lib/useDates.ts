@@ -256,13 +256,7 @@ export function useDates() {
       return;
     }
 
-    if (updateResult && updateResult.length > 0) {
-      try {
-        await supabase.rpc('send_date_confirmed_email', { date_id: dateId });
-      } catch (emailErr) {
-        console.error('Date confirmation email error:', emailErr);
-      }
-    }
+   // Date confirmed email handled by DB trigger
 
     fetchDates();
   }, [fetchDates]);
