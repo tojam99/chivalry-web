@@ -66,20 +66,20 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-sm font-bold text-sage-800">Age Range</p>
               <span className="text-sm font-bold text-sage-400">{local.ageMin} — {local.ageMax}</span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4 px-1">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-cream-600 w-8">Min</span>
+                <span className="text-xs text-cream-600 w-8 shrink-0">Min</span>
                 <input type="range" min={18} max={99} value={local.ageMin}
                   onChange={(e) => { const v = parseInt(e.target.value); if (v < local.ageMax) setLocal({ ...local, ageMin: v }); }}
                   className="flex-1 slider-modern" />
-                <span className="text-sm font-semibold text-sage-800 w-6 text-right">{local.ageMin}</span>
+                <span className="text-sm font-semibold text-sage-800 w-8 text-right shrink-0">{local.ageMin}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-cream-600 w-8">Max</span>
+                <span className="text-xs text-cream-600 w-8 shrink-0">Max</span>
                 <input type="range" min={18} max={99} value={local.ageMax}
                   onChange={(e) => { const v = parseInt(e.target.value); if (v > local.ageMin) setLocal({ ...local, ageMax: v }); }}
                   className="flex-1 slider-modern" />
-                <span className="text-sm font-semibold text-sage-800 w-6 text-right">{local.ageMax}</span>
+                <span className="text-sm font-semibold text-sage-800 w-8 text-right shrink-0">{local.ageMax}</span>
               </div>
             </div>
           </div>
@@ -90,10 +90,12 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-sm font-bold text-sage-800">Maximum Distance</p>
               <span className="text-sm font-bold text-sage-400">{local.maxDistance} mi</span>
             </div>
-            <input type="range" min={1} max={100} value={local.maxDistance}
-              onChange={(e) => setLocal({ ...local, maxDistance: parseInt(e.target.value) })}
-              className="w-full slider-modern" />
-            <div className="flex justify-between mt-1">
+            <div className="px-1">
+              <input type="range" min={1} max={100} value={local.maxDistance}
+                onChange={(e) => setLocal({ ...local, maxDistance: parseInt(e.target.value) })}
+                className="w-full slider-modern" />
+            </div>
+            <div className="flex justify-between mt-1 px-1">
               <span className="text-[10px] text-cream-600">1 mi</span>
               <span className="text-[10px] text-cream-600">25 mi</span>
               <span className="text-[10px] text-cream-600">50 mi</span>
@@ -162,6 +164,7 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           border-radius: 3px;
           background: #EDE8DF;
           outline: none;
+          margin: 0 2px;
         }
         .slider-modern::-webkit-slider-thumb {
           -webkit-appearance: none;
