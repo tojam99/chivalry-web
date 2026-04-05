@@ -10,9 +10,10 @@ interface Props {
   filters: DiscoverFilters;
   onApply: (filters: DiscoverFilters) => void;
   onUpgrade?: () => void;
+  isPremium?: boolean;
 }
 
-export default function FilterModal({ open, onClose, filters, onApply, onUpgrade }: Props) {
+export default function FilterModal({ open, onClose, filters, onApply, onUpgrade, isPremium = false }: Props) {
   const [local, setLocal] = useState<DiscoverFilters>(filters);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function FilterModal({ open, onClose, filters, onApply, onUpgrade
       maxDistance: 100,
       verifiedOnly: false,
       sharedInterests: false,
+      lookingFor: '',
     });
   };
 
@@ -108,53 +110,111 @@ export default function FilterModal({ open, onClose, filters, onApply, onUpgrade
             </div>
           </div>
 
-          {/* Advanced Filters (Premium locked) */}
+          {/* Advanced Filters */}
           <div>
             <p className="text-sm font-bold text-sage-800 mb-3">Advanced Filters</p>
-            <div className="bg-cream-200/50 rounded-2xl overflow-hidden opacity-60">
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-sage-600" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-sage-800">Verified only</p>
-                    <p className="text-[11px] text-cream-600">Only show verified profiles</p>
+            {isPremium ? (
+              <div className="bg-cream-100 rounded-2xl overflow-hidden">
+                {/* Verified Only — toggle */}
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-sage-600" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Verified only</p>
+                      <p className="text-[11px] text-cream-600">Only show verified profiles</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setLocal({ ...local, verifiedOnly: !local.verifiedOnly })}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${local.verifiedOnly ? 'bg-sage-400' : 'bg-cream-300'}`}>
+                    <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${local.verifiedOnly ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="h-px bg-cream-200 mx-4" />
+                {/* Shared Interests — toggle */}
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Sparkles className="w-5 h-5 text-sage-400" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Shared interests</p>
+                      <p className="text-[11px] text-cream-600">Prioritize similar interests</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setLocal({ ...local, sharedInterests: !local.sharedInterests })}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${local.sharedInterests ? 'bg-sage-400' : 'bg-cream-300'}`}>
+                    <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${local.sharedInterests ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="h-px bg-cream-200 mx-4" />
+                {/* Looking For — dropdown */}
+                <div className="px-4 py-3.5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Heart className="w-5 h-5 text-sage-400" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Looking for</p>
+                      <p className="text-[11px] text-cream-600">Match by relationship goals</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {['Any', 'Relationship', 'Something casual', 'Not sure yet', 'New friends'].map((opt) => (
+                      <button key={opt} onClick={() => setLocal({ ...local, lookingFor: opt === 'Any' ? '' : opt })}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                          (opt === 'Any' && !local.lookingFor) || local.lookingFor === opt
+                            ? 'bg-sage-400 text-white' : 'bg-cream-200 text-cream-700'
+                        }`}>
+                        {opt}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <span className="text-cream-500 text-xs">🔒</span>
               </div>
-              <div className="h-px bg-cream-300 mx-4" />
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Sparkles className="w-5 h-5 text-sage-400" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-sage-800">Shared interests</p>
-                    <p className="text-[11px] text-cream-600">Prioritize similar interests</p>
+            ) : (
+              <div className="bg-cream-200/50 rounded-2xl overflow-hidden opacity-60">
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-sage-600" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Verified only</p>
+                      <p className="text-[11px] text-cream-600">Only show verified profiles</p>
+                    </div>
                   </div>
+                  <span className="text-cream-500 text-xs">🔒</span>
                 </div>
-                <span className="text-cream-500 text-xs">🔒</span>
-              </div>
-              <div className="h-px bg-cream-300 mx-4" />
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Heart className="w-5 h-5 text-sage-400" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-sage-800">Looking for</p>
-                    <p className="text-[11px] text-cream-600">Match by relationship goals</p>
+                <div className="h-px bg-cream-300 mx-4" />
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Sparkles className="w-5 h-5 text-sage-400" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Shared interests</p>
+                      <p className="text-[11px] text-cream-600">Prioritize similar interests</p>
+                    </div>
                   </div>
+                  <span className="text-cream-500 text-xs">🔒</span>
                 </div>
-                <span className="text-cream-500 text-xs">🔒</span>
+                <div className="h-px bg-cream-300 mx-4" />
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-sage-100 rounded-lg flex items-center justify-center"><Heart className="w-5 h-5 text-sage-400" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-sage-800">Looking for</p>
+                      <p className="text-[11px] text-cream-600">Match by relationship goals</p>
+                    </div>
+                  </div>
+                  <span className="text-cream-500 text-xs">🔒</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Upgrade banner */}
-          <button onClick={() => { if (onUpgrade) { onClose(); onUpgrade(); } }} className="w-full bg-sage-400 rounded-2xl p-4 flex items-center gap-3 hover:bg-sage-500 transition-colors text-left">
-            <Zap className="w-5 h-5 text-white shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-white">Unlock Advanced Filters</p>
-              <p className="text-[11px] text-white/80">Verified-only, shared interests, and more</p>
-            </div>
-          </button>
+          {/* Upgrade banner — only show if not premium */}
+          {!isPremium && (
+            <button onClick={() => { if (onUpgrade) { onClose(); onUpgrade(); } }} className="w-full bg-sage-400 rounded-2xl p-4 flex items-center gap-3 hover:bg-sage-500 transition-colors text-left">
+              <Zap className="w-5 h-5 text-white shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-white">Unlock Advanced Filters</p>
+                <p className="text-[11px] text-white/80">Verified-only, shared interests, and more</p>
+              </div>
+            </button>
+          )}
           {/* Bottom spacer — more on mobile, less on desktop */}
           <div className="h-[50px] md:h-[10px]" />
         </div>

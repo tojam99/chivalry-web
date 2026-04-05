@@ -21,7 +21,7 @@ function resolvePhoto(url: string): string {
 
 export default function DiscoverPage() {
   const supabase = createClient();
-  const [filters, setFilters] = useState<DiscoverFilters>({ showMe: 'Everyone', ageMin: 18, ageMax: 99, maxDistance: 100, verifiedOnly: false, sharedInterests: false });
+  const [filters, setFilters] = useState<DiscoverFilters>({ showMe: 'Everyone', ageMin: 18, ageMax: 99, maxDistance: 100, verifiedOnly: false, sharedInterests: false, lookingFor: '' });
   const [showFilters, setShowFilters] = useState(false);
   const { profiles, loading, recordSwipe, matchAlert, dismissMatchAlert, refresh, myProfileId } = useDiscover(filters);
   const router = useRouter();
@@ -300,7 +300,7 @@ export default function DiscoverPage() {
           <p className="text-cream-700 max-w-sm mb-6">Try adjusting your filters or check back later!</p>
           <button onClick={() => { setSwipedIds(new Set()); refresh(); }} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">Refresh</button>
         </div>
-        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} />
+        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} isPremium={isPremium} />
       </div>
     );
   }
@@ -651,7 +651,7 @@ export default function DiscoverPage() {
 
       <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
         onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }}
-        onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} />
+        onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} isPremium={isPremium} />
 
       {/* Mobile: render filter into header via portal */}
       {headerMount && createPortal(
