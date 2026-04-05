@@ -316,7 +316,8 @@ export default function ProfilePage() {
     setVerifyError('');
     const cleanNum = '+1' + verifyPhone.replace(/[\s\(\)\-]/g, '');
     const supabaseClient = createClient();
-    const { error } = await supabaseClient.auth.signInWithOtp({ phone: cleanNum });
+    // Use updateUser to add phone to EXISTING account (not signInWithOtp which creates a new user)
+    const { error } = await supabaseClient.auth.updateUser({ phone: cleanNum });
     if (error) {
       setVerifyError(error.message);
     } else {
@@ -337,7 +338,7 @@ export default function ProfilePage() {
     const { error } = await supabaseClient.auth.verifyOtp({
       phone: cleanNum,
       token: verifyCode.trim(),
-      type: 'sms',
+      type: 'phone_change',
     });
     if (error) {
       setVerifyError(error.message);
