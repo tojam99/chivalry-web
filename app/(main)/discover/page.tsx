@@ -7,6 +7,7 @@ import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
 import { createClient } from '@/lib/supabase-browser';
 import FilterModal from '@/components/FilterModal';
 import PricingModal from '@/components/PricingModal';
+import { sendEmailNotification } from '@/lib/sendEmailNotification';
 import {
   Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
   Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
@@ -156,17 +157,41 @@ export default function DiscoverPage() {
       setAnimating(true);
       setSwipeAnimation(direction);
       const profileId = currentProfile.id;
+      const profileName = currentProfile.name;
       setLastSwiped({ id: profileId, direction });
       
       setTimeout(() => {
         setSwipedIds((prev) => new Set(prev).add(profileId));
         recordSwipe(profileId, direction);
+        // Send like email notification (only on right swipe)
+        if (direction === 'right' && myProfileId) {
+          const myName = profiles.find(p => false)?.name; // We don't have our own name here
+          sendEmailNotification({
+            type: 'like',
+            recipientProfileId: profileId,
+          });
+        }
         setSwipeAnimation(null);
         setAnimating(false);
       }, 300);
     },
-    [animating, currentProfile, recordSwipe]
+    [animating, currentProfile, recordSwipe, myProfileId]
   );
+
+  // Send match email when a match is detected
+  useEffect(() => {
+    if (matchAlert && myProfileId) {
+      // Find the matched profile to get their ID
+      const matchedProfile = profiles.find(p => p.name === matchAlert.name);
+      if (matchedProfile) {
+        sendEmailNotification({
+          type: 'match',
+          recipientProfileId: matchedProfile.id,
+          senderName: 'your match',
+        });
+      }
+    }
+  }, [matchAlert]);
 
   async function handleRewind() {
     if (!lastSwiped || !myProfileId) return;
@@ -267,6 +292,17 @@ export default function DiscoverPage() {
 
       setSuccessAlert(`Date request for "${ideaTitle}" sent to ${otherName}!`);
       setTimeout(() => setSuccessAlert(null), 4000);
+
+      // Send email notification for date request
+      if (confirmRequest.profileId) {
+        sendEmailNotification({
+          type: 'date_request',
+          recipientProfileId: confirmRequest.profileId,
+          senderName: 'Someone',
+          dateTitle: ideaTitle,
+          dateLocation: confirmRequest.idea?.location_name,
+        });
+      }
     } catch (err: any) {
       console.error('Date request error:', err);
       setConfirmRequest({ visible: false, idea: null, profileId: null, profileName: null });
