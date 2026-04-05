@@ -802,8 +802,8 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-sm text-cream-600 shrink-0">+1</span>
                       <input type="tel" value={verifyPhone} onChange={(e) => setVerifyPhone(e.target.value.replace(/[^0-9\s\(\)\-]/g, ''))}
-                        placeholder="(615) 555-1234" maxLength={14}
-                        className="w-full bg-white border border-cream-300 rounded-xl px-4 py-2.5 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 text-center" />
+                        placeholder="(818) 555-1234" maxLength={14} autoComplete="off"
+                        className="w-full bg-white border border-cream-300 rounded-xl px-4 py-2.5 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 text-center placeholder:text-cream-400" />
                     </div>
                     {verifyError && <p className="text-xs text-red-500 mb-3">{verifyError}</p>}
                     <button onClick={handleSendVerifyCode} disabled={verifyLoading}
