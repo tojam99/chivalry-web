@@ -63,13 +63,15 @@ export async function POST(req: NextRequest) {
         .eq('id', profileId);
     }
 
+    const successPage = isSubscription ? '/profile' : '/discover';
+
     // Create checkout session
     const sessionConfig: any = {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: isSubscription ? 'subscription' : 'payment',
-      success_url: `${req.nextUrl.origin}/profile?checkout=success&type=${priceKey}`,
-      cancel_url: `${req.nextUrl.origin}/profile?checkout=cancel`,
+      success_url: `${req.nextUrl.origin}${successPage}?checkout=success&type=${priceKey}`,
+      cancel_url: `${req.nextUrl.origin}/discover`,
       metadata: {
         profile_id: profileId,
         price_key: priceKey,

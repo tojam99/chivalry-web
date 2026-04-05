@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
 import { createClient } from '@/lib/supabase-browser';
 import FilterModal from '@/components/FilterModal';
@@ -10,7 +10,7 @@ import PricingModal from '@/components/PricingModal';
 import {
   Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
   Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
-  SlidersHorizontal, Send, Undo2, Maximize2, Zap,
+  SlidersHorizontal, Send, Undo2, Maximize2, Zap, Check,
 } from 'lucide-react';
 
 const SUPABASE_STORAGE = 'https://pkekuxksofbzjrieesqm.supabase.co/storage/v1/object/public/profile-photos/';
@@ -35,6 +35,34 @@ export default function DiscoverPage() {
   const [headerMount, setHeaderMount] = useState<HTMLElement | null>(null);
   const [showPricing, setShowPricing] = useState(false);
   const [myAuthId, setMyAuthId] = useState<string>('');
+  const [checkoutToast, setCheckoutToast] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  // Detect checkout success return
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      const type = searchParams.get('type') || '';
+      if (type.startsWith('credits_')) {
+        setCheckoutToast('Credits added! You can now request a date.');
+      }
+      // Clean URL
+      window.history.replaceState({}, '', '/discover');
+      // Refresh credits
+      setTimeout(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          if (!user) return;
+          supabase.from('profiles').select('date_request_credits, premium').eq('auth_id', user.id).single().then(({ data }) => {
+            if (data) {
+              setDateCredits(data.date_request_credits || 0);
+              setIsPremium(data.premium || false);
+            }
+          });
+        });
+      }, 1000);
+      // Auto-dismiss toast
+      setTimeout(() => setCheckoutToast(null), 5000);
+    }
+  }, []);
 
   // Mount filter button into mobile header
   useEffect(() => {
@@ -583,6 +611,14 @@ export default function DiscoverPage() {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Checkout success toast */}
+      {checkoutToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium flex items-center gap-2">
+          <Check className="w-4 h-4" />
+          {checkoutToast}
         </div>
       )}
 
