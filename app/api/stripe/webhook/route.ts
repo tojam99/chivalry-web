@@ -65,8 +65,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case 'customer.subscription.deleted':
-      case 'customer.subscription.expired': {
+      case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const profileId = subscription.metadata?.profile_id;
 
