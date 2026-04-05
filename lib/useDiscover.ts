@@ -1,45 +1,98 @@
-'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from './supabase-browser';
+const supabase = createClient();
 
-import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase-browser';
-import type { Profile } from './useProfile';
-
-export interface DiscoverProfile extends Profile {
-  photos: { id: string; url: string; position: number }[];
-  date_ideas: { id: string; title: string; location_name: string; latitude: number; longitude: number }[];
+export interface DiscoverProfile {
+  id: string;
+  name: string;
+  age: number | null;
+  bio: string;
+  city: string;
+  available_now: boolean;
+  identification: string;
+  profession: string;
+  education: string;
+  height: string;
+  body_type: string;
+  ethnicity: string;
+  religion: string;
+  drinking: string;
+  smoking: string;
+  workout: string;
+  children: string;
+  looking_for: string;
+  verified: boolean;
+  is_seed_profile?: boolean;
+  photos: { photo_url: string; sort_order: number }[];
+  date_ideas: { id: string; title: string; location_name: string }[];
   interests: string[];
-  distance?: number;
 }
 
-function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+export interface DiscoverFilters {
+  showMe: string;
+  ageMin: number;
+  ageMax: number;
+  maxDistance: number;
+  verifiedOnly: boolean;
+  sharedInterests: boolean;
+  lookingFor: string;
 }
 
-export function useDiscover(myProfile: Profile | null) {
-  const supabase = createClient();
+export function useDiscover(filters?: DiscoverFilters) {
   const [profiles, setProfiles] = useState<DiscoverProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [myProfileId, setMyProfileId] = useState<string | null>(null);
+  const [matchAlert, setMatchAlert] = useState<{ name: string; photo: string } | null>(null);
 
   const fetchProfiles = useCallback(async () => {
-    if (!myProfile?.id) return;
-    setLoading(true);
-
     try {
-      // Get exclusion lists in parallel
-      const [swipedResult, blockedResult, matchesResult] = await Promise.all([
-        supabase.from('swipes').select('swiped_id').eq('swiper_id', myProfile.id),
-        supabase.from('reports').select('reported_id').eq('reporter_id', myProfile.id).eq('reason', 'blocked'),
-        supabase.from('matches').select('user1_id, user2_id').or(`user1_id.eq.${myProfile.id},user2_id.eq.${myProfile.id}`),
+      setLoading(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: myProfile } = await supabase
+        .from('profiles')
+        .select('id, show_me, age_min, age_max, max_distance')
+        .eq('auth_id', user.id)
+        .single();
+
+      if (!myProfile) return;
+      setMyProfileId(myProfile.id);
+
+      // Use passed filters or fall back to profile defaults
+      const activeFilters = {
+        showMe: filters?.showMe || myProfile.show_me || 'Everyone',
+        ageMin: filters?.ageMin ?? myProfile.age_min ?? 18,
+        ageMax: filters?.ageMax ?? myProfile.age_max ?? 40,
+        maxDistance: filters?.maxDistance ?? myProfile.max_distance ?? 25,
+        verifiedOnly: filters?.verifiedOnly ?? false,
+        sharedInterests: filters?.sharedInterests ?? false,
+        lookingFor: filters?.lookingFor ?? '',
+      };
+
+      // Get IDs to exclude in parallel
+      const [swipedResult, blockedResult, matchesResult, myInterestsResult] = await Promise.all([
+        supabase
+          .from('swipes')
+          .select('swiped_id')
+          .eq('swiper_id', myProfile.id),
+        supabase
+          .from('reports')
+          .select('reported_id')
+          .eq('reporter_id', myProfile.id)
+          .eq('reason', 'blocked'),
+        supabase
+          .from('matches')
+          .select('user1_id, user2_id')
+          .or(`user1_id.eq.${myProfile.id},user2_id.eq.${myProfile.id}`),
+        // Fetch my interests for shared interests filter
+        activeFilters.sharedInterests
+          ? supabase
+              .from('profile_interests')
+              .select('interests(name)')
+              .eq('profile_id', myProfile.id)
+          : Promise.resolve({ data: [] }),
       ]);
 
       const swipedIds = swipedResult.data?.map((s) => s.swiped_id) || [];
@@ -49,149 +102,190 @@ export function useDiscover(myProfile: Profile | null) {
       );
       const excludeIds = [myProfile.id, ...swipedIds, ...blockedIds, ...matchedIds];
 
-      console.log('[Discover] My ID:', myProfile.id);
-      console.log('[Discover] Swiped:', swipedIds.length, 'Blocked:', blockedIds.length, 'Matched:', matchedIds.length);
-      console.log('[Discover] Total excluded:', excludeIds.length);
+      const myInterests = (myInterestsResult.data || [])
+        .map((pi: any) => pi.interests?.name)
+        .filter(Boolean);
 
-      // Fetch eligible profiles
+      // Build query for regular (non-seed) profiles
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, age, bio, city, available_now, identification, profession, education, height, body_type, ethnicity, religion, drinking, smoking, workout, children, looking_for, verified, is_seed_profile')
+        .eq('is_active', true)
         .eq('onboarded', true)
-        .eq('is_active', true);
-
-      if (excludeIds.length > 0) {
-        query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-      }
+        .eq('is_seed_profile', false)
+        .not('id', 'in', `(${excludeIds.join(',')})`)
+        .order('last_active', { ascending: false })
+        .limit(20);
 
       // Gender filter
-      const showMe = (myProfile.show_me || '').toLowerCase();
-      if (showMe && showMe !== 'everyone') {
-        query = query.eq('identification', myProfile.show_me);
-      }
+      if (activeFilters.showMe === 'Women') query = query.eq('identification', 'Female');
+      else if (activeFilters.showMe === 'Men') query = query.eq('identification', 'Male');
 
       // Age filter
-      if (myProfile.age_min && myProfile.age_min > 18) query = query.gte('age', myProfile.age_min);
-      if (myProfile.age_max && myProfile.age_max < 99) query = query.lte('age', myProfile.age_max);
+      query = query.gte('age', activeFilters.ageMin);
+      query = query.lte('age', activeFilters.ageMax);
 
-      query = query.limit(50);
+      // Verified filter
+      if (activeFilters.verifiedOnly) {
+        query = query.eq('verified', true);
+      }
 
-      const { data: profilesData, error: profilesError } = await query;
-      console.log('[Discover] Profiles returned:', profilesData?.length, 'Error:', profilesError);
+      // Looking for filter
+      if (activeFilters.lookingFor) {
+        query = query.eq('looking_for', activeFilters.lookingFor);
+      }
 
-      if (!profilesData || profilesData.length === 0) {
+      // Fetch seed profiles separately (respect gender filter, skip distance)
+      let seedQuery = supabase
+        .from('profiles')
+        .select('id, name, age, bio, city, available_now, identification, profession, education, height, body_type, ethnicity, religion, drinking, smoking, workout, children, looking_for, verified, is_seed_profile')
+        .eq('is_active', true)
+        .eq('onboarded', true)
+        .eq('is_seed_profile', true)
+        .not('id', 'in', `(${excludeIds.join(',')})`)
+        .limit(50);
+
+      // Apply gender filter to seed profiles too
+      if (activeFilters.showMe === 'Women') seedQuery = seedQuery.eq('identification', 'Female');
+      else if (activeFilters.showMe === 'Men') seedQuery = seedQuery.eq('identification', 'Male');
+
+      const [regularResult, seedResult] = await Promise.all([
+        query,
+        seedQuery,
+      ]);
+
+      if (regularResult.error) throw regularResult.error;
+      if (seedResult.error) throw seedResult.error;
+
+      // Merge: regular profiles first, then seed profiles shuffled in
+      const regularProfiles = regularResult.data || [];
+      const seedProfiles = (seedResult.data || []).sort(() => Math.random() - 0.5);
+      const profilesData = [...regularProfiles, ...seedProfiles];
+
+      if (profilesData.length === 0) {
         setProfiles([]);
         setLoading(false);
         return;
       }
 
-    // Fetch photos, date ideas, and interests for all profiles
-    const profileIds = profilesData.map((p) => p.id);
+      const profileIds = profilesData.map((p) => p.id);
 
-    const [photosResult, ideasResult, interestsResult] = await Promise.all([
-      supabase.from('profile_photos').select('*').in('profile_id', profileIds).order('position', { ascending: true }),
-      supabase.from('date_ideas').select('*').in('profile_id', profileIds),
-      supabase.from('profile_interests').select('profile_id, interest_id').in('profile_id', profileIds),
-    ]);
+      // BATCH: Fetch all photos, date ideas, interests in parallel
+      const [photosResult, ideasResult, interestsResult] = await Promise.all([
+        supabase
+          .from('profile_photos')
+          .select('profile_id, photo_url, sort_order')
+          .in('profile_id', profileIds)
+          .order('sort_order'),
+        supabase
+          .from('date_ideas')
+          .select('id, profile_id, title, location_name')
+          .in('profile_id', profileIds)
+          .order('sort_order'),
+        supabase
+          .from('profile_interests')
+          .select('profile_id, interests(name)')
+          .in('profile_id', profileIds),
+      ]);
 
-    console.log('[Discover] Photos:', photosResult.data?.length, 'Error:', photosResult.error?.message);
-    console.log('[Discover] Ideas:', ideasResult.data?.length, 'Error:', ideasResult.error?.message);
-    console.log('[Discover] Interests:', interestsResult.data?.length, 'Error:', interestsResult.error?.message);
-
-    // If photos query failed, still show profiles without filtering by photos
-    const photosByProfile: Record<string, any[]> = {};
-    (photosResult.data || []).forEach((p) => {
-      if (!photosByProfile[p.profile_id]) photosByProfile[p.profile_id] = [];
-      photosByProfile[p.profile_id].push(p);
-    });
-
-    const ideasByProfile: Record<string, any[]> = {};
-    (ideasResult.data || []).forEach((d) => {
-      if (!ideasByProfile[d.profile_id]) ideasByProfile[d.profile_id] = [];
-      ideasByProfile[d.profile_id].push(d);
-    });
-
-    // Fetch interest names separately to avoid join issues
-    const interestIds = (interestsResult.data || []).map((i: any) => i.interest_id).filter(Boolean);
-    let interestNames: Record<string, string> = {};
-    if (interestIds.length > 0) {
-      const { data: interestsData } = await supabase.from('interests').select('id, name').in('id', interestIds);
-      (interestsData || []).forEach((i) => { interestNames[i.id] = i.name; });
-    }
-
-    const interestsByProfile: Record<string, string[]> = {};
-    (interestsResult.data || []).forEach((i: any) => {
-      if (!interestsByProfile[i.profile_id]) interestsByProfile[i.profile_id] = [];
-      if (interestNames[i.interest_id]) interestsByProfile[i.profile_id].push(interestNames[i.interest_id]);
-    });
-
-    // Build final profiles with distance
-    const enriched: DiscoverProfile[] = profilesData
-      .map((p) => ({
-        ...p,
-        photos: photosByProfile[p.id] || [],
-        date_ideas: ideasByProfile[p.id] || [],
-        interests: interestsByProfile[p.id] || [],
-        distance:
-          myProfile.latitude && p.latitude
-            ? Math.round(getDistanceKm(myProfile.latitude, myProfile.longitude, p.latitude, p.longitude) * 0.621371)
-            : undefined,
-      }))
-      .filter((p) => p.photos.length > 0) // Must have at least one photo
-      .filter((p) => {
-        if (!myProfile.max_distance || !p.distance) return true;
-        return p.distance <= myProfile.max_distance;
+      // Group by profile_id
+      const photosByProfile = new Map<string, { photo_url: string; sort_order: number }[]>();
+      (photosResult.data || []).forEach((p) => {
+        if (!photosByProfile.has(p.profile_id)) photosByProfile.set(p.profile_id, []);
+        photosByProfile.get(p.profile_id)!.push({ photo_url: p.photo_url, sort_order: p.sort_order });
       });
 
-    setProfiles(enriched);
-    setCurrentIndex(0);
-    setLoading(false);
-    } catch (err) {
-      console.error('[Discover] Error:', err);
-      setProfiles([]);
+      const ideasByProfile = new Map<string, { id: string; title: string; location_name: string }[]>();
+      (ideasResult.data || []).forEach((d) => {
+        if (!ideasByProfile.has(d.profile_id)) ideasByProfile.set(d.profile_id, []);
+        ideasByProfile.get(d.profile_id)!.push({ id: d.id, title: d.title, location_name: d.location_name });
+      });
+
+      const interestsByProfile = new Map<string, string[]>();
+      (interestsResult.data || []).forEach((pi: any) => {
+        if (!interestsByProfile.has(pi.profile_id)) interestsByProfile.set(pi.profile_id, []);
+        if (pi.interests?.name) interestsByProfile.get(pi.profile_id)!.push(pi.interests.name);
+      });
+
+      // Assemble profiles (only those with photos)
+      let fullProfiles = profilesData
+        .filter((p) => photosByProfile.has(p.id) && photosByProfile.get(p.id)!.length > 0)
+        .map((p) => ({
+          ...p,
+          photos: photosByProfile.get(p.id) || [],
+          date_ideas: ideasByProfile.get(p.id) || [],
+          interests: interestsByProfile.get(p.id) || [],
+        }));
+
+      // Shared interests: sort profiles with more shared interests first
+      if (activeFilters.sharedInterests && myInterests.length > 0) {
+        fullProfiles.sort((a, b) => {
+          const aShared = a.interests.filter((i) => myInterests.includes(i)).length;
+          const bShared = b.interests.filter((i) => myInterests.includes(i)).length;
+          return bShared - aShared;
+        });
+      }
+
+      setProfiles(fullProfiles);
+    } catch (err: any) {
+      console.error('fetchProfiles error:', err);
+    } finally {
       setLoading(false);
     }
-  }, [myProfile?.id]);
+  }, [filters?.showMe, filters?.ageMin, filters?.ageMax, filters?.maxDistance, filters?.verifiedOnly, filters?.sharedInterests, filters?.lookingFor]);
 
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
 
-  const swipe = useCallback(
-    async (direction: 'left' | 'right') => {
-      if (currentIndex >= profiles.length) return null;
-      const target = profiles[currentIndex];
+  const recordSwipe = useCallback(async (profileId: string, direction: 'left' | 'right' | 'super') => {
+    if (!myProfileId) return;
 
-      await supabase.from('swipes').insert({
-        swiper_id: myProfile!.id,
-        swiped_id: target.id,
-        direction,
-      });
+    // Check if this is a seed profile — if so, just record swipe, no match possible
+    const swipedProfile = profiles.find((p) => p.id === profileId);
+    const isSeed = swipedProfile?.is_seed_profile === true;
 
-      setCurrentIndex((prev) => prev + 1);
+    // Optimistic: check if they already swiped right on us BEFORE we swipe
+    let theyLikedUs = false;
+    if (!isSeed && (direction === 'right' || direction === 'super')) {
+      const { data: theirSwipe } = await supabase
+        .from('swipes')
+        .select('id')
+        .eq('swiper_id', profileId)
+        .eq('swiped_id', myProfileId)
+        .in('direction', ['right', 'super'])
+        .maybeSingle();
 
-      // Check if mutual match on right swipe
-      if (direction === 'right') {
-        const { data: mutual } = await supabase
-          .from('swipes')
-          .select('id')
-          .eq('swiper_id', target.id)
-          .eq('swiped_id', myProfile!.id)
-          .eq('direction', 'right')
-          .maybeSingle();
+      theyLikedUs = !!theirSwipe;
+    }
 
-        if (mutual) {
-          return { matched: true, profile: target };
-        }
+    const { error } = await supabase
+      .from('swipes')
+      .upsert(
+        { swiper_id: myProfileId, swiped_id: profileId, direction },
+        { onConflict: 'swiper_id,swiped_id', ignoreDuplicates: true }
+      );
+
+    if (error) {
+      console.error('recordSwipe error:', error);
+      return;
+    }
+
+    // Show match modal immediately if they already liked us
+    if (theyLikedUs) {
+      const matchedProfile = profiles.find((p) => p.id === profileId);
+      if (matchedProfile) {
+        setMatchAlert({
+          name: matchedProfile.name,
+          photo: matchedProfile.photos[0]?.photo_url || '',
+        });
       }
+    }
+  }, [myProfileId, profiles]);
 
-      return { matched: false, profile: target };
-    },
-    [profiles, currentIndex, myProfile]
-  );
+  const dismissMatchAlert = useCallback(() => {
+    setMatchAlert(null);
+  }, []);
 
-  const currentProfile = currentIndex < profiles.length ? profiles[currentIndex] : null;
-  const remaining = profiles.length - currentIndex;
-
-  return { currentProfile, remaining, loading, swipe, refetch: fetchProfiles };
+  return { profiles, loading, myProfileId, recordSwipe, matchAlert, dismissMatchAlert, refresh: fetchProfiles };
 }
