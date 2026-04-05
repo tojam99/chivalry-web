@@ -305,6 +305,28 @@ export default function ProfilePage() {
     setNewIdeaTitle(''); setNewIdeaLocation(''); setNewIdeaLocationFull(''); setShowAddIdea(false);
   }
 
+  const [managingSubscription, setManagingSubscription] = useState(false);
+
+  async function handleManageSubscription() {
+    setManagingSubscription(true);
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId: profile.id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Portal error:', data.error);
+      }
+    } catch (err) {
+      console.error('Portal error:', err);
+    }
+    setManagingSubscription(false);
+  }
+
   async function handleSignOut() { await signOut(); router.push('/'); router.refresh(); }
 
   async function handleSendVerifyCode() {
@@ -692,7 +714,9 @@ export default function ProfilePage() {
           <h3 className="text-base font-bold text-sage-800">Subscription &amp; Credits</h3>
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
-          <button onClick={() => { setPricingMode('premium'); setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (profile.premium) handleManageSubscription(); else { setPricingMode('premium'); setShowUpgradeModal(true); } }}
+            disabled={managingSubscription}
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors disabled:opacity-50">
             <div className="w-10 h-10 bg-sage-100 rounded-xl flex items-center justify-center">
               <Diamond className="w-5 h-5 text-sage-500" />
             </div>
@@ -700,7 +724,9 @@ export default function ProfilePage() {
               <p className="text-sm font-medium text-sage-800">{profile.premium ? 'Premium Member' : 'Free Plan'}</p>
               <p className="text-xs text-sage-400">{profile.premium ? 'Active subscription' : 'Upgrade for more features'}</p>
             </div>
-            <span className="text-xs font-medium text-sage-400">{profile.premium ? 'Manage' : 'Upgrade'}</span>
+            <span className="text-xs font-medium text-sage-400">
+              {managingSubscription ? 'Loading...' : (profile.premium ? 'Manage' : 'Upgrade')}
+            </span>
           </button>
           <button onClick={() => { setPricingMode('credits'); setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-gold-400/20 rounded-xl flex items-center justify-center">
