@@ -34,6 +34,7 @@ export default function DiscoverPage() {
   const [expandedPhoto, setExpandedPhoto] = useState(false);
   const [headerMount, setHeaderMount] = useState<HTMLElement | null>(null);
   const [showPricing, setShowPricing] = useState(false);
+  const [pricingMode, setPricingMode] = useState<'premium' | 'credits'>('credits');
   const [myAuthId, setMyAuthId] = useState<string>('');
   const [checkoutToast, setCheckoutToast] = useState<string | null>(null);
 
@@ -299,7 +300,7 @@ export default function DiscoverPage() {
           <p className="text-cream-700 max-w-sm mb-6">Try adjusting your filters or check back later!</p>
           <button onClick={() => { setSwipedIds(new Set()); refresh(); }} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">Refresh</button>
         </div>
-        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} onUpgrade={() => setShowPricing(true)} />
+        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} />
       </div>
     );
   }
@@ -565,7 +566,7 @@ export default function DiscoverPage() {
             </div>
             <h3 className="font-bold text-xl text-sage-800 mb-2">No Date Request Credits</h3>
             <p className="text-cream-700 text-sm mb-6">You need credits to send date requests. Purchase a credit pack to get started.</p>
-            <button onClick={() => { setNoCreditsModal(false); setShowPricing(true); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Get Credits</button>
+            <button onClick={() => { setNoCreditsModal(false); setPricingMode('credits'); setShowPricing(true); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Get Credits</button>
             <button onClick={() => setNoCreditsModal(false)} className="w-full text-cream-600 font-medium py-2 rounded-2xl hover:bg-cream-200 transition-colors text-sm">Not now</button>
           </div>
         </div>
@@ -577,7 +578,7 @@ export default function DiscoverPage() {
         onClose={() => setShowPricing(false)}
         profileId={myProfileId || ''}
         authId={myAuthId}
-        mode="credits"
+        mode={pricingMode}
       />
 
       {/* Match modal */}
@@ -645,7 +646,7 @@ export default function DiscoverPage() {
 
       <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
         onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }}
-        onUpgrade={() => setShowPricing(true)} />
+        onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} />
 
       {/* Mobile: render filter into header via portal */}
       {headerMount && createPortal(
