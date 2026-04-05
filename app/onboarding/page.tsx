@@ -463,6 +463,13 @@ export default function OnboardingPage() {
 
         {/* Progress */}
         <div className="px-6 pt-6 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex-1" />
+            <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }}
+              className="text-xs text-cream-600 hover:text-sage-600 transition-colors">
+              Sign out
+            </button>
+          </div>
           <div className="flex gap-1.5">
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i < step ? 'bg-sage-400' : 'bg-cream-300'}`} />
@@ -478,7 +485,7 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-5 animate-fadeIn">
               <div>
-                <h2 className="font-display text-2xl text-sage-800">Let&apos;s get to know you</h2>
+                <h2 className="font-bold text-2xl text-sage-800">Let&apos;s get to know you</h2>
                 <p className="text-cream-600 text-sm mt-1">This info will be shown on your profile</p>
               </div>
               <div>
@@ -527,7 +534,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-5 animate-fadeIn">
               <div>
-                <h2 className="font-display text-2xl text-sage-800">Add your best photos</h2>
+                <h2 className="font-bold text-2xl text-sage-800">Add your best photos</h2>
                 <p className="text-cream-600 text-sm mt-1">At least 1 required, up to 6. Drag to reorder.</p>
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
@@ -540,7 +547,7 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-5 animate-fadeIn">
               <div>
-                <h2 className="font-display text-2xl text-sage-800">A bit more about you</h2>
+                <h2 className="font-bold text-2xl text-sage-800">A bit more about you</h2>
                 <p className="text-cream-600 text-sm mt-1">Help us find dates near you</p>
               </div>
               <div>
@@ -583,7 +590,7 @@ export default function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-5 animate-fadeIn">
               <div>
-                <h2 className="font-display text-2xl text-sage-800">Tell us about yourself</h2>
+                <h2 className="font-bold text-2xl text-sage-800">Tell us about yourself</h2>
                 <p className="text-cream-600 text-sm mt-1">Write a short bio and what you&apos;re looking for</p>
               </div>
               <div>
@@ -620,7 +627,7 @@ export default function OnboardingPage() {
           {step === 5 && (
             <div className="space-y-4 animate-fadeIn">
               <div>
-                <h2 className="font-display text-2xl text-sage-800">Pick your interests</h2>
+                <h2 className="font-bold text-2xl text-sage-800">Pick your interests</h2>
                 <p className="text-cream-600 text-sm mt-1">Choose at least {MIN_INTERESTS} (max {MAX_INTERESTS})</p>
               </div>
               {maxWarning && (
@@ -684,7 +691,7 @@ export default function OnboardingPage() {
       {showAgeConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-cream-50 rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-fadeIn">
-            <h3 className="font-display text-xl text-sage-800 text-center">Your age is {confirmAge}</h3>
+            <h3 className="font-bold text-xl text-sage-800 text-center">Your age is {confirmAge}</h3>
             <p className="text-cream-600 text-sm mt-2 text-center">Please confirm your age is correct — it cannot be changed later.</p>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowAgeConfirm(false)}
@@ -704,7 +711,7 @@ export default function OnboardingPage() {
               <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mb-5">
                 {(() => { const Icon = buildingMessages[buildingStep].icon; return <Icon className="w-8 h-8 text-sage-500 animate-pulse" />; })()}
               </div>
-              <h3 className="font-display text-xl text-sage-800 text-center">Building your profile</h3>
+              <h3 className="font-bold text-xl text-sage-800 text-center">Building your profile</h3>
               <p className="text-cream-600 text-sm mt-2 text-center animate-fadeIn" key={buildingStep}>{buildingMessages[buildingStep].text}</p>
               <div className="flex gap-2 mt-6">
                 {buildingMessages.map((_, i) => (
