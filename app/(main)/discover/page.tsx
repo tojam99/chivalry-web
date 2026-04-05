@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
 import { createClient } from '@/lib/supabase-browser';
 import FilterModal from '@/components/FilterModal';
@@ -36,18 +36,16 @@ export default function DiscoverPage() {
   const [showPricing, setShowPricing] = useState(false);
   const [myAuthId, setMyAuthId] = useState<string>('');
   const [checkoutToast, setCheckoutToast] = useState<string | null>(null);
-  const searchParams = useSearchParams();
 
   // Detect checkout success return
   useEffect(() => {
-    if (searchParams.get('checkout') === 'success') {
-      const type = searchParams.get('type') || '';
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      const type = params.get('type') || '';
       if (type.startsWith('credits_')) {
         setCheckoutToast('Credits added! You can now request a date.');
       }
-      // Clean URL
       window.history.replaceState({}, '', '/discover');
-      // Refresh credits
       setTimeout(() => {
         supabase.auth.getUser().then(({ data: { user } }) => {
           if (!user) return;
@@ -59,7 +57,6 @@ export default function DiscoverPage() {
           });
         });
       }, 1000);
-      // Auto-dismiss toast
       setTimeout(() => setCheckoutToast(null), 5000);
     }
   }, []);
