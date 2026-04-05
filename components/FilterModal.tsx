@@ -177,14 +177,21 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
         .slider-modern::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
           background: #7A9A6D;
           cursor: pointer;
           border: 3px solid white;
           box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-          margin-top: -10px;
+          margin-top: -12px;
+        }
+        @media (min-width: 768px) {
+          .slider-modern::-webkit-slider-thumb {
+            width: 22px;
+            height: 22px;
+            margin-top: -9px;
+          }
         }
         .slider-modern::-webkit-slider-thumb:hover {
           transform: scale(1.1);
@@ -194,13 +201,19 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           transform: scale(1.05);
         }
         .slider-modern::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
           background: #7A9A6D;
           cursor: pointer;
           border: 3px solid white;
           box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        @media (min-width: 768px) {
+          .slider-modern::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+          }
         }
         .slider-modern::-moz-range-track {
           height: 5px;
