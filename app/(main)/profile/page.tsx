@@ -195,6 +195,7 @@ export default function ProfilePage() {
   const [showPreview, setShowPreview] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showIdeaLocationPicker, setShowIdeaLocationPicker] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // ── Photo drag & drop ──
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -582,25 +583,25 @@ export default function ProfilePage() {
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
           {/* Incognito Mode */}
-          <div className="flex items-center gap-3 px-4 py-3.5">
+          <button onClick={() => { if (!profile.premium) setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <EyeOff className="w-5 h-5 text-cream-600" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 text-left">
               <p className="text-sm font-medium text-sage-800">Incognito Mode</p>
               <p className="text-xs text-cream-600">Hide your profile from discover</p>
             </div>
             {profile.premium ? (
-              <button onClick={() => updateField('is_active', !(profile as any).is_active)}
+              <div onClick={(e) => { e.stopPropagation(); updateField('is_active', !(profile as any).is_active); }}
                 className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${!(profile as any).is_active ? 'bg-sage-400' : 'bg-cream-300'}`}>
                 <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${!(profile as any).is_active ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-              </button>
+              </div>
             ) : (
               <span className="text-cream-500 text-xs">🔒</span>
             )}
-          </div>
+          </button>
           {/* Travel Mode */}
-          <button onClick={() => { if (profile.premium) setShowCityPicker(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (profile.premium) setShowCityPicker(true); else setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-cream-600" />
             </div>
@@ -611,23 +612,23 @@ export default function ProfilePage() {
             {profile.premium ? <ChevronRight className="w-4 h-4 text-cream-500" /> : <span className="text-cream-500 text-xs">🔒</span>}
           </button>
           {/* Hide My Ratings */}
-          <div className="flex items-center gap-3 px-4 py-3.5">
+          <button onClick={() => { if (!profile.premium) setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <StarOff className="w-5 h-5 text-cream-600" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 text-left">
               <p className="text-sm font-medium text-sage-800">Hide My Ratings</p>
               <p className="text-xs text-cream-600">Others won&apos;t see your date ratings</p>
             </div>
             {profile.premium ? (
-              <button onClick={() => updateField('hide_rating', !profile.hide_rating)}
+              <div onClick={(e) => { e.stopPropagation(); updateField('hide_rating', !profile.hide_rating); }}
                 className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${profile.hide_rating ? 'bg-sage-400' : 'bg-cream-300'}`}>
                 <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${profile.hide_rating ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-              </button>
+              </div>
             ) : (
               <span className="text-cream-500 text-xs">🔒</span>
             )}
-          </div>
+          </button>
         </div>
         {!profile.premium && (
           <p className="text-xs text-cream-500 mt-2 text-center">Upgrade to Premium to unlock these features</p>
@@ -733,6 +734,33 @@ export default function ProfilePage() {
         onSelect={(place) => { setNewIdeaLocation(place.name); setNewIdeaLocationFull(`${place.name} · ${place.address}`); }} />
 
       {/* Preview is now rendered via early return above, not here */}
+
+      {/* Upgrade to Premium Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4" style={{ height: '100dvh' }}>
+          <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Diamond className="w-8 h-8 text-sage-400" />
+              </div>
+              <h3 className="font-bold text-xl text-sage-800 mb-2">Upgrade to Premium</h3>
+              <p className="text-sm text-cream-600 mb-6">
+                Unlock Incognito Mode, Travel Mode, Hide Ratings, Advanced Filters, and more.
+              </p>
+              <div className="space-y-2">
+                <button onClick={() => { /* TODO: Stripe checkout */ setShowUpgradeModal(false); }}
+                  className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors">
+                  View Plans
+                </button>
+                <button onClick={() => setShowUpgradeModal(false)}
+                  className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom styles */}
       <style jsx global>{`
