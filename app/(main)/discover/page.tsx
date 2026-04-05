@@ -344,6 +344,11 @@ export default function DiscoverPage() {
           {photoIndex > 0 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex - 1); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronLeft className="w-4 h-4" /></button>)}
           {photoIndex < photos.length - 1 && (<button onClick={(e) => { e.stopPropagation(); setPhotoIndex(photoIndex + 1); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40"><ChevronRight className="w-4 h-4" /></button>)}
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+          {/* Expand icon */}
+          <button onClick={(e) => { e.stopPropagation(); setExpandedPhoto(true); }}
+            className="absolute top-3 right-3 w-8 h-8 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/40 z-10">
+            <Maximize2 className="w-4 h-4" />
+          </button>
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-end justify-between">
               <div className="flex-1 min-w-0">
