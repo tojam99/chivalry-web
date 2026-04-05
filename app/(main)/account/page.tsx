@@ -145,9 +145,15 @@ export default function AccountPage() {
         <label className="text-xs font-bold text-cream-600 uppercase tracking-wide mb-2 block">Sign-in method</label>
         <div className="bg-cream-100 rounded-2xl px-4 py-3.5">
           <p className="text-sm font-medium text-sage-800">
-            {user?.app_metadata?.provider === 'google' ? 'Google' :
-             user?.app_metadata?.provider === 'apple' ? 'Apple' :
-             user?.app_metadata?.provider === 'phone' ? 'Phone' : 'Email & Password'}
+            {(() => {
+              const providers = user?.app_metadata?.providers || [];
+              const provider = user?.app_metadata?.provider || '';
+              if (providers.includes('google') || provider === 'google') return 'Google';
+              if (providers.includes('apple') || provider === 'apple') return 'Apple';
+              if (providers.includes('email') || provider === 'email') return 'Email & Password';
+              if (providers.includes('phone') || provider === 'phone') return 'Phone';
+              return user?.email ? 'Email & Password' : 'Unknown';
+            })()}
           </p>
           <p className="text-xs text-cream-600 mt-0.5">How you sign in to Chivalry</p>
         </div>
