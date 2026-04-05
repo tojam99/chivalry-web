@@ -45,6 +45,12 @@ export default function DiscoverPage() {
       if (type.startsWith('credits_')) {
         setCheckoutToast('Credits added! You can now request a date.');
       }
+      // Restore the profile they were looking at
+      const savedProfile = sessionStorage.getItem('chivalry_checkout_profile');
+      if (savedProfile) {
+        setReturnToProfileId(savedProfile);
+        sessionStorage.removeItem('chivalry_checkout_profile');
+      }
       window.history.replaceState({}, '', '/discover');
       setTimeout(() => {
         supabase.auth.getUser().then(({ data: { user } }) => {
@@ -79,6 +85,14 @@ export default function DiscoverPage() {
   }>({ visible: false, idea: null, profileId: null, profileName: null });
   const [noCreditsModal, setNoCreditsModal] = useState(false);
   const [successAlert, setSuccessAlert] = useState<string | null>(null);
+  const [returnToProfileId, setReturnToProfileId] = useState<string | null>(null);
+
+  // Save current profile ID before going to checkout
+  useEffect(() => {
+    if (showPricing && currentProfile) {
+      sessionStorage.setItem('chivalry_checkout_profile', currentProfile.id);
+    }
+  }, [showPricing]);
 
   // Fetch credits
   useEffect(() => {
@@ -95,7 +109,17 @@ export default function DiscoverPage() {
     fetchCredits();
   }, [confirmRequest.visible]);
 
-  const visibleProfiles = profiles.filter((p) => !swipedIds.has(p.id));
+  const visibleProfiles = useMemo(() => {
+    const filtered = profiles.filter((p) => !swipedIds.has(p.id));
+    if (returnToProfileId) {
+      const idx = filtered.findIndex((p) => p.id === returnToProfileId);
+      if (idx > 0) {
+        const [target] = filtered.splice(idx, 1);
+        filtered.unshift(target);
+      }
+    }
+    return filtered;
+  }, [profiles, swipedIds, returnToProfileId]);
   const currentProfile = visibleProfiles[0] || null;
   const remaining = visibleProfiles.length;
 
