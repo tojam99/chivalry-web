@@ -33,6 +33,8 @@ export interface ProfileData {
   verified: boolean;
   premium: boolean;
   premium_expires_at: string | null;
+  is_active: boolean;
+  hide_rating: boolean;
   onboarded: boolean;
   photos: { id: string; photo_url: string; sort_order: number }[];
   date_ideas: { id: string; title: string; location_name: string; sort_order: number }[];

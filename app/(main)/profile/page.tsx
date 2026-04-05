@@ -590,13 +590,17 @@ export default function ProfilePage() {
               <p className="text-sm font-medium text-sage-800">Incognito Mode</p>
               <p className="text-xs text-cream-600">Hide your profile from discover</p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={!(profile as any).is_active} onChange={(e) => updateField('is_active', !e.target.checked)} />
-              <div className="w-11 h-6 bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-400"></div>
-            </label>
+            {profile.premium ? (
+              <button onClick={() => updateField('is_active', !(profile as any).is_active)}
+                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${!(profile as any).is_active ? 'bg-sage-400' : 'bg-cream-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${!(profile as any).is_active ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+              </button>
+            ) : (
+              <span className="text-cream-500 text-xs">🔒</span>
+            )}
           </div>
           {/* Travel Mode */}
-          <button onClick={() => setShowCityPicker(true)} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (profile.premium) setShowCityPicker(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-cream-600" />
             </div>
@@ -604,7 +608,7 @@ export default function ProfilePage() {
               <p className="text-sm font-medium text-sage-800">Travel Mode</p>
               <p className="text-xs text-sage-400">{profile.city || 'Set your location'}</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-cream-500" />
+            {profile.premium ? <ChevronRight className="w-4 h-4 text-cream-500" /> : <span className="text-cream-500 text-xs">🔒</span>}
           </button>
           {/* Hide My Ratings */}
           <div className="flex items-center gap-3 px-4 py-3.5">
@@ -615,12 +619,19 @@ export default function ProfilePage() {
               <p className="text-sm font-medium text-sage-800">Hide My Ratings</p>
               <p className="text-xs text-cream-600">Others won&apos;t see your date ratings</p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" checked={false} onChange={() => {}} />
-              <div className="w-11 h-6 bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sage-400"></div>
-            </label>
+            {profile.premium ? (
+              <button onClick={() => updateField('hide_rating', !profile.hide_rating)}
+                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${profile.hide_rating ? 'bg-sage-400' : 'bg-cream-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${profile.hide_rating ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+              </button>
+            ) : (
+              <span className="text-cream-500 text-xs">🔒</span>
+            )}
           </div>
         </div>
+        {!profile.premium && (
+          <p className="text-xs text-cream-500 mt-2 text-center">Upgrade to Premium to unlock these features</p>
+        )}
       </div>
 
       {/* ══════════════ Subscription & Credits ══════════════ */}
@@ -660,12 +671,12 @@ export default function ProfilePage() {
           <h3 className="text-base font-bold text-sage-800">General</h3>
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => router.push('/notifications')} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <Bell className="w-5 h-5 text-cream-600" />
             <span className="flex-1 text-left text-sm font-medium text-sage-800">Notifications</span>
             <ChevronRight className="w-4 h-4 text-cream-500" />
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => router.push('/account')} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <User className="w-5 h-5 text-cream-600" />
             <span className="flex-1 text-left text-sm font-medium text-sage-800">Account</span>
             <ChevronRight className="w-4 h-4 text-cream-500" />
