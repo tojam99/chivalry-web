@@ -9,9 +9,10 @@ interface Props {
   onClose: () => void;
   filters: DiscoverFilters;
   onApply: (filters: DiscoverFilters) => void;
+  onUpgrade?: () => void;
 }
 
-export default function FilterModal({ open, onClose, filters, onApply }: Props) {
+export default function FilterModal({ open, onClose, filters, onApply, onUpgrade }: Props) {
   const [local, setLocal] = useState<DiscoverFilters>(filters);
 
   useEffect(() => {
@@ -147,13 +148,13 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           </div>
 
           {/* Upgrade banner */}
-          <div className="bg-sage-400 rounded-2xl p-4 flex items-center gap-3">
+          <button onClick={() => { if (onUpgrade) { onClose(); onUpgrade(); } }} className="w-full bg-sage-400 rounded-2xl p-4 flex items-center gap-3 hover:bg-sage-500 transition-colors text-left">
             <Zap className="w-5 h-5 text-white shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">Unlock Advanced Filters</p>
               <p className="text-[11px] text-white/80">Verified-only, shared interests, and more</p>
             </div>
-          </div>
+          </button>
           {/* Bottom spacer — more on mobile, less on desktop */}
           <div className="h-[50px] md:h-[10px]" />
         </div>
