@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/useProfile';
 import { createClient } from '@/lib/supabase-browser';
 import PlacePicker from '@/components/PlacePicker';
+import PricingModal from '@/components/PricingModal';
 import {
   MapPin, Briefcase, GraduationCap, Ruler, Heart, Coffee, Plus, LogOut, X,
   Camera, Trash2, ChevronRight, ChevronLeft, Loader2, Check, Zap, Edit3, Eye,
@@ -196,6 +197,7 @@ export default function ProfilePage() {
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showIdeaLocationPicker, setShowIdeaLocationPicker] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [pricingMode, setPricingMode] = useState<'premium' | 'credits'>('premium');
 
   // ── Photo drag & drop ──
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -583,7 +585,7 @@ export default function ProfilePage() {
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
           {/* Incognito Mode */}
-          <button onClick={() => { if (!profile.premium) setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (!profile.premium) { setPricingMode('premium'); setShowUpgradeModal(true); } }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <EyeOff className="w-5 h-5 text-cream-600" />
             </div>
@@ -601,7 +603,7 @@ export default function ProfilePage() {
             )}
           </button>
           {/* Travel Mode */}
-          <button onClick={() => { if (profile.premium) setShowCityPicker(true); else setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (profile.premium) setShowCityPicker(true); else { setPricingMode('premium'); setShowUpgradeModal(true); } }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <Plane className="w-5 h-5 text-cream-600" />
             </div>
@@ -612,7 +614,7 @@ export default function ProfilePage() {
             {profile.premium ? <ChevronRight className="w-4 h-4 text-cream-500" /> : <span className="text-cream-500 text-xs">🔒</span>}
           </button>
           {/* Hide My Ratings */}
-          <button onClick={() => { if (!profile.premium) setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (!profile.premium) { setPricingMode('premium'); setShowUpgradeModal(true); } }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-cream-200 rounded-xl flex items-center justify-center">
               <StarOff className="w-5 h-5 text-cream-600" />
             </div>
@@ -642,7 +644,7 @@ export default function ProfilePage() {
           <h3 className="text-base font-bold text-sage-800">Subscription &amp; Credits</h3>
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden divide-y divide-cream-200">
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { setPricingMode('premium'); setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-sage-100 rounded-xl flex items-center justify-center">
               <Diamond className="w-5 h-5 text-sage-500" />
             </div>
@@ -652,13 +654,13 @@ export default function ProfilePage() {
             </div>
             <span className="text-xs font-medium text-sage-400">{profile.premium ? 'Manage' : 'Upgrade'}</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { setPricingMode('credits'); setShowUpgradeModal(true); }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className="w-10 h-10 bg-gold-400/20 rounded-xl flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-gold-600" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-medium text-sage-800">Date Request Credits</p>
-              <p className="text-xs text-cream-600">0 credits remaining</p>
+              <p className="text-xs text-cream-600">{(profile as any).date_request_credits || 0} credits remaining</p>
             </div>
             <span className="text-xs font-medium text-sage-400">Get More</span>
           </button>
@@ -736,36 +738,14 @@ export default function ProfilePage() {
       {/* Preview is now rendered via early return above, not here */}
 
       {/* Upgrade to Premium Modal */}
-      {showUpgradeModal && (
-        <>
-          {/* Tap outside to close */}
-          <div className="fixed inset-0 z-50" onClick={() => setShowUpgradeModal(false)} />
-          {/* Modal card */}
-          <div className="fixed inset-0 z-[51] flex items-center justify-center px-4 pointer-events-none" style={{ height: '100dvh' }}>
-            <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-cream-300 pointer-events-auto">
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Diamond className="w-8 h-8 text-sage-400" />
-                </div>
-                <h3 className="font-bold text-xl text-sage-800 mb-2">Upgrade to Premium</h3>
-                <p className="text-sm text-cream-600 mb-6">
-                  Unlock Incognito Mode, Travel Mode, Hide Ratings, Advanced Filters, and more.
-                </p>
-                <div className="space-y-2">
-                  <button onClick={() => { /* TODO: Stripe checkout */ setShowUpgradeModal(false); }}
-                    className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors">
-                    View Plans
-                  </button>
-                  <button onClick={() => setShowUpgradeModal(false)}
-                    className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
-                    Not now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Pricing Modal */}
+      <PricingModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        profileId={profile.id}
+        authId={profile.auth_id}
+        mode={pricingMode}
+      />
 
       {/* Custom styles */}
       <style jsx global>{`
