@@ -181,13 +181,19 @@ export default function DiscoverPage() {
   // Send match email when a match is detected
   useEffect(() => {
     if (matchAlert && myProfileId) {
-      // Find the matched profile to get their ID
       const matchedProfile = profiles.find(p => p.name === matchAlert.name);
       if (matchedProfile) {
+        // Send match email to the OTHER person
         sendEmailNotification({
           type: 'match',
           recipientProfileId: matchedProfile.id,
           senderName: 'your match',
+        });
+        // Send match email to YOURSELF too
+        sendEmailNotification({
+          type: 'match',
+          recipientProfileId: myProfileId,
+          senderName: matchedProfile.name,
         });
       }
     }
