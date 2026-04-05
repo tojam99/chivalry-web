@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useDiscover, type DiscoverFilters } from '@/lib/useDiscover';
 import { createClient } from '@/lib/supabase-browser';
 import FilterModal from '@/components/FilterModal';
+import PricingModal from '@/components/PricingModal';
 import {
   Heart, X, MapPin, ChevronLeft, ChevronRight, Sparkles, MessageCircle,
   Coffee, Compass, Loader2, Info, ShieldCheck, Leaf, Search, Calendar,
@@ -32,6 +33,8 @@ export default function DiscoverPage() {
   const [swipeAnimation, setSwipeAnimation] = useState<'left' | 'right' | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState(false);
   const [headerMount, setHeaderMount] = useState<HTMLElement | null>(null);
+  const [showPricing, setShowPricing] = useState(false);
+  const [myAuthId, setMyAuthId] = useState<string>('');
 
   // Mount filter button into mobile header
   useEffect(() => {
@@ -57,6 +60,7 @@ export default function DiscoverPage() {
     async function fetchCredits() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setMyAuthId(user.id);
       const { data } = await supabase.from('profiles').select('date_request_credits, premium').eq('auth_id', user.id).single();
       if (data) {
         setDateCredits(data.date_request_credits || 0);
@@ -511,11 +515,21 @@ export default function DiscoverPage() {
               <span className="text-2xl">🎟️</span>
             </div>
             <h3 className="font-bold text-xl text-sage-800 mb-2">No Date Request Credits</h3>
-            <p className="text-cream-700 text-sm mb-6">You need credits to send date requests. Upgrade to Premium for unlimited requests, or purchase a credit pack.</p>
-            <button onClick={() => setNoCreditsModal(false)} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Got it</button>
+            <p className="text-cream-700 text-sm mb-6">You need credits to send date requests. Purchase a credit pack to get started.</p>
+            <button onClick={() => { setNoCreditsModal(false); setShowPricing(true); }} className="w-full bg-sage-400 text-white font-medium py-3 rounded-2xl hover:bg-sage-500 transition-colors mb-2">Get Credits</button>
+            <button onClick={() => setNoCreditsModal(false)} className="w-full text-cream-600 font-medium py-2 rounded-2xl hover:bg-cream-200 transition-colors text-sm">Not now</button>
           </div>
         </div>
       )}
+
+      {/* Pricing Modal */}
+      <PricingModal
+        open={showPricing}
+        onClose={() => setShowPricing(false)}
+        profileId={myProfileId || ''}
+        authId={myAuthId}
+        mode="credits"
+      />
 
       {/* Match modal */}
       {matchAlert && (
