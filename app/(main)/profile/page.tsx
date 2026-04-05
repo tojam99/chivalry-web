@@ -737,30 +737,36 @@ export default function ProfilePage() {
 
       {/* Upgrade to Premium Modal */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 md:bg-black/50 md:backdrop-blur-sm flex items-center justify-center px-4" style={{ height: '100dvh' }}>
-          <div onClick={() => setShowUpgradeModal(false)} className="absolute inset-0" />
-          <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl relative z-10 border border-cream-300">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Diamond className="w-8 h-8 text-sage-400" />
-              </div>
-              <h3 className="font-bold text-xl text-sage-800 mb-2">Upgrade to Premium</h3>
-              <p className="text-sm text-cream-600 mb-6">
-                Unlock Incognito Mode, Travel Mode, Hide Ratings, Advanced Filters, and more.
-              </p>
-              <div className="space-y-2">
-                <button onClick={() => { /* TODO: Stripe checkout */ setShowUpgradeModal(false); }}
-                  className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors">
-                  View Plans
-                </button>
-                <button onClick={() => setShowUpgradeModal(false)}
-                  className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
-                  Not now
-                </button>
+        <>
+          {/* Backdrop - desktop only */}
+          <div className="hidden md:block fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setShowUpgradeModal(false)} />
+          {/* Mobile tap-outside */}
+          <div className="md:hidden fixed inset-0 z-50" onClick={() => setShowUpgradeModal(false)} />
+          {/* Modal card */}
+          <div className="fixed inset-0 z-[51] flex items-center justify-center px-4 pointer-events-none" style={{ height: '100dvh' }}>
+            <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-cream-300 pointer-events-auto">
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Diamond className="w-8 h-8 text-sage-400" />
+                </div>
+                <h3 className="font-bold text-xl text-sage-800 mb-2">Upgrade to Premium</h3>
+                <p className="text-sm text-cream-600 mb-6">
+                  Unlock Incognito Mode, Travel Mode, Hide Ratings, Advanced Filters, and more.
+                </p>
+                <div className="space-y-2">
+                  <button onClick={() => { /* TODO: Stripe checkout */ setShowUpgradeModal(false); }}
+                    className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors">
+                    View Plans
+                  </button>
+                  <button onClick={() => setShowUpgradeModal(false)}
+                    className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
+                    Not now
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Custom styles */}
