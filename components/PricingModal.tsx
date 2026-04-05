@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Diamond, Sparkles, Check, Loader2, Zap } from 'lucide-react';
 
 interface Props {
@@ -23,6 +23,11 @@ const PREMIUM_FEATURES = [
 export default function PricingModal({ open, onClose, profileId, authId, mode = 'premium' }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const [tab, setTab] = useState<'premium' | 'credits'>(mode);
+
+  // Sync tab with mode when modal opens
+  useEffect(() => {
+    if (open) setTab(mode);
+  }, [open, mode]);
 
   async function handleCheckout(priceKey: string) {
     setLoading(priceKey);
