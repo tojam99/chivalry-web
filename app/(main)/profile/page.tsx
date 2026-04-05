@@ -308,6 +308,7 @@ export default function ProfilePage() {
   const [managingSubscription, setManagingSubscription] = useState(false);
 
   async function handleManageSubscription() {
+    if (!profile) return;
     setManagingSubscription(true);
     try {
       const res = await fetch('/api/stripe/portal', {
