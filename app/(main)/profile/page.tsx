@@ -198,6 +198,12 @@ export default function ProfilePage() {
   const [showIdeaLocationPicker, setShowIdeaLocationPicker] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [pricingMode, setPricingMode] = useState<'premium' | 'credits'>('premium');
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verifyStep, setVerifyStep] = useState<'phone' | 'code' | 'done'>('phone');
+  const [verifyPhone, setVerifyPhone] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
 
   // ── Photo drag & drop ──
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -300,6 +306,47 @@ export default function ProfilePage() {
   }
 
   async function handleSignOut() { await signOut(); router.push('/'); router.refresh(); }
+
+  async function handleSendVerifyCode() {
+    if (!verifyPhone || verifyPhone.replace(/[\s\(\)\-]/g, '').length < 10) {
+      setVerifyError('Enter a valid 10-digit phone number.');
+      return;
+    }
+    setVerifyLoading(true);
+    setVerifyError('');
+    const cleanNum = '+1' + verifyPhone.replace(/[\s\(\)\-]/g, '');
+    const supabaseClient = createClient();
+    const { error } = await supabaseClient.auth.signInWithOtp({ phone: cleanNum });
+    if (error) {
+      setVerifyError(error.message);
+    } else {
+      setVerifyStep('code');
+    }
+    setVerifyLoading(false);
+  }
+
+  async function handleVerifyCode() {
+    if (!verifyCode || verifyCode.trim().length !== 6) {
+      setVerifyError('Enter the 6-digit code.');
+      return;
+    }
+    setVerifyLoading(true);
+    setVerifyError('');
+    const cleanNum = '+1' + verifyPhone.replace(/[\s\(\)\-]/g, '');
+    const supabaseClient = createClient();
+    const { error } = await supabaseClient.auth.verifyOtp({
+      phone: cleanNum,
+      token: verifyCode.trim(),
+      type: 'sms',
+    });
+    if (error) {
+      setVerifyError(error.message);
+    } else {
+      await updateField('verified', true);
+      setVerifyStep('done');
+    }
+    setVerifyLoading(false);
+  }
 
   if (loading || !profile) {
     return (<div className="flex flex-col items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 text-sage-400 animate-spin mb-4" /><p className="text-cream-700">Loading profile...</p></div>);
@@ -564,15 +611,15 @@ export default function ProfilePage() {
           <h3 className="text-base font-bold text-sage-800">Verification</h3>
         </div>
         <div className="bg-cream-100 rounded-2xl overflow-hidden">
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
+          <button onClick={() => { if (!profile.verified) { setVerifyStep('phone'); setVerifyPhone(''); setVerifyCode(''); setVerifyError(''); setShowVerifyModal(true); } }} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-cream-200 transition-colors">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${profile.verified ? 'bg-green-100' : 'bg-cream-200'}`}>
               <ShieldCheck className={`w-5 h-5 ${profile.verified ? 'text-green-500' : 'text-cream-500'}`} />
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-medium text-sage-800">{profile.verified ? 'Verified' : 'Not Verified'}</p>
-              <p className="text-xs text-cream-600">{profile.verified ? 'Your profile is verified' : 'Verify to build trust'}</p>
+              <p className="text-xs text-cream-600">{profile.verified ? 'Your profile is verified' : 'Tap to verify your identity'}</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-cream-500" />
+            {!profile.verified && <ChevronRight className="w-4 h-4 text-cream-500" />}
           </button>
         </div>
       </div>
@@ -737,7 +784,79 @@ export default function ProfilePage() {
 
       {/* Preview is now rendered via early return above, not here */}
 
-      {/* Upgrade to Premium Modal */}
+      {/* Verification Modal */}
+      {showVerifyModal && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setShowVerifyModal(false)} />
+          <div className="fixed inset-0 z-[51] flex items-center justify-center px-4 pointer-events-none" style={{ height: '100dvh' }}>
+            <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-cream-300 pointer-events-auto">
+              <div className="p-6 text-center">
+                {verifyStep === 'phone' && (
+                  <>
+                    <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <ShieldCheck className="w-8 h-8 text-sage-400" />
+                    </div>
+                    <h3 className="font-bold text-xl text-sage-800 mb-2">Verify Your Phone</h3>
+                    <p className="text-sm text-cream-600 mb-4">We&apos;ll send a 6-digit code to verify your phone number and earn the verified badge.</p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-sm text-cream-600 shrink-0">+1</span>
+                      <input type="tel" value={verifyPhone} onChange={(e) => setVerifyPhone(e.target.value.replace(/[^0-9\s\(\)\-]/g, ''))}
+                        placeholder="(615) 555-1234" maxLength={14}
+                        className="w-full bg-white border border-cream-300 rounded-xl px-4 py-2.5 text-sm text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 text-center" />
+                    </div>
+                    {verifyError && <p className="text-xs text-red-500 mb-3">{verifyError}</p>}
+                    <button onClick={handleSendVerifyCode} disabled={verifyLoading}
+                      className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors mb-2 disabled:opacity-50 flex items-center justify-center gap-2">
+                      {verifyLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Send Code
+                    </button>
+                    <button onClick={() => setShowVerifyModal(false)}
+                      className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
+                      Not now
+                    </button>
+                  </>
+                )}
+                {verifyStep === 'code' && (
+                  <>
+                    <div className="w-16 h-16 bg-sage-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <ShieldCheck className="w-8 h-8 text-sage-400" />
+                    </div>
+                    <h3 className="font-bold text-xl text-sage-800 mb-2">Enter Code</h3>
+                    <p className="text-sm text-cream-600 mb-4">We sent a 6-digit code to +1{verifyPhone.replace(/[\s\(\)\-]/g, '')}</p>
+                    <input type="text" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="000000" maxLength={6}
+                      className="w-full bg-white border border-cream-300 rounded-xl px-4 py-3 text-lg text-sage-800 focus:outline-none focus:ring-2 focus:ring-sage-400/30 text-center tracking-[0.3em] font-bold mb-4" />
+                    {verifyError && <p className="text-xs text-red-500 mb-3">{verifyError}</p>}
+                    <button onClick={handleVerifyCode} disabled={verifyLoading}
+                      className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors mb-2 disabled:opacity-50 flex items-center justify-center gap-2">
+                      {verifyLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Verify
+                    </button>
+                    <button onClick={() => { setVerifyStep('phone'); setVerifyCode(''); setVerifyError(''); }}
+                      className="w-full py-3 text-cream-600 font-medium rounded-2xl hover:bg-cream-200 transition-colors">
+                      Back
+                    </button>
+                  </>
+                )}
+                {verifyStep === 'done' && (
+                  <>
+                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <ShieldCheck className="w-8 h-8 text-green-500" />
+                    </div>
+                    <h3 className="font-bold text-xl text-sage-800 mb-2">You&apos;re Verified!</h3>
+                    <p className="text-sm text-cream-600 mb-6">Your profile now has the verified badge.</p>
+                    <button onClick={() => setShowVerifyModal(false)}
+                      className="w-full py-3 bg-sage-400 text-white font-bold rounded-2xl hover:bg-sage-500 transition-colors">
+                      Done
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Pricing Modal */}
       <PricingModal
         open={showUpgradeModal}
