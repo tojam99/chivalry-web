@@ -37,6 +37,7 @@ export default function DiscoverPage() {
   const [showPricing, setShowPricing] = useState(false);
   const [pricingMode, setPricingMode] = useState<'premium' | 'credits'>('credits');
   const [myAuthId, setMyAuthId] = useState<string>('');
+  const [myName, setMyName] = useState<string>('');
   const [checkoutToast, setCheckoutToast] = useState<string | null>(null);
 
   // Detect checkout success return
@@ -102,10 +103,11 @@ export default function DiscoverPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setMyAuthId(user.id);
-      const { data } = await supabase.from('profiles').select('date_request_credits, premium').eq('auth_id', user.id).single();
+      const { data } = await supabase.from('profiles').select('date_request_credits, premium, name').eq('auth_id', user.id).single();
       if (data) {
         setDateCredits(data.date_request_credits || 0);
         setIsPremium(data.premium || false);
+        setMyName(data.name || '');
       }
     }
     fetchCredits();
@@ -183,13 +185,13 @@ export default function DiscoverPage() {
     if (matchAlert && myProfileId) {
       const matchedProfile = profiles.find(p => p.name === matchAlert.name);
       if (matchedProfile) {
-        // Send match email to the OTHER person
+        // Send match email to the OTHER person (with my name)
         sendEmailNotification({
           type: 'match',
           recipientProfileId: matchedProfile.id,
-          senderName: 'your match',
+          senderName: myName || 'Someone',
         });
-        // Send match email to YOURSELF too
+        // Send match email to MYSELF (with their name)
         sendEmailNotification({
           type: 'match',
           recipientProfileId: myProfileId,
