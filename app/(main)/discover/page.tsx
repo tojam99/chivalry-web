@@ -300,7 +300,7 @@ export default function DiscoverPage() {
           <p className="text-cream-700 max-w-sm mb-6">Try adjusting your filters or check back later!</p>
           <button onClick={() => { setSwipedIds(new Set()); refresh(); }} className="bg-sage-400 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-sage-500 transition-colors">Refresh</button>
         </div>
-        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }} onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} isPremium={isPremium} />
+        <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters} onApply={(f) => { setFilters(f); }} onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} isPremium={isPremium} />
       </div>
     );
   }
@@ -650,7 +650,7 @@ export default function DiscoverPage() {
       )}
 
       <FilterModal open={showFilters} onClose={() => setShowFilters(false)} filters={filters}
-        onApply={(f) => { setFilters(f); setSwipedIds(new Set()); }}
+        onApply={(f) => { setFilters(f); }}
         onUpgrade={() => { setPricingMode('premium'); setShowPricing(true); }} isPremium={isPremium} />
 
       {/* Mobile: render filter into header via portal */}
