@@ -66,19 +66,23 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-sm font-bold text-sage-800">Age Range</p>
               <span className="text-sm font-bold text-sage-400">{local.ageMin} — {local.ageMax}</span>
             </div>
-            <div className="space-y-4 px-1">
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-cream-600 w-8 shrink-0">Min</span>
-                <input type="range" min={18} max={99} value={local.ageMin}
-                  onChange={(e) => { const v = parseInt(e.target.value); if (v < local.ageMax) setLocal({ ...local, ageMin: v }); }}
-                  className="flex-1 slider-modern" />
+                <div className="flex-1 px-3">
+                  <input type="range" min={18} max={99} value={local.ageMin}
+                    onChange={(e) => { const v = parseInt(e.target.value); if (v < local.ageMax) setLocal({ ...local, ageMin: v }); }}
+                    className="w-full slider-modern" />
+                </div>
                 <span className="text-sm font-semibold text-sage-800 w-8 text-right shrink-0">{local.ageMin}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-cream-600 w-8 shrink-0">Max</span>
-                <input type="range" min={18} max={99} value={local.ageMax}
-                  onChange={(e) => { const v = parseInt(e.target.value); if (v > local.ageMin) setLocal({ ...local, ageMax: v }); }}
-                  className="flex-1 slider-modern" />
+                <div className="flex-1 px-3">
+                  <input type="range" min={18} max={99} value={local.ageMax}
+                    onChange={(e) => { const v = parseInt(e.target.value); if (v > local.ageMin) setLocal({ ...local, ageMax: v }); }}
+                    className="w-full slider-modern" />
+                </div>
                 <span className="text-sm font-semibold text-sage-800 w-8 text-right shrink-0">{local.ageMax}</span>
               </div>
             </div>
@@ -90,12 +94,12 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
               <p className="text-sm font-bold text-sage-800">Maximum Distance</p>
               <span className="text-sm font-bold text-sage-400">{local.maxDistance} mi</span>
             </div>
-            <div className="px-1">
+            <div className="px-3">
               <input type="range" min={1} max={100} value={local.maxDistance}
                 onChange={(e) => setLocal({ ...local, maxDistance: parseInt(e.target.value) })}
                 className="w-full slider-modern" />
             </div>
-            <div className="flex justify-between mt-1 px-1">
+            <div className="flex justify-between mt-1">
               <span className="text-[10px] text-cream-600">1 mi</span>
               <span className="text-[10px] text-cream-600">25 mi</span>
               <span className="text-[10px] text-cream-600">50 mi</span>
@@ -160,22 +164,27 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
         .slider-modern {
           -webkit-appearance: none;
           appearance: none;
+          width: 100%;
           height: 5px;
           border-radius: 3px;
           background: #EDE8DF;
           outline: none;
-          margin: 0 2px;
+          margin: 8px 0;
+        }
+        .slider-modern::-webkit-slider-container {
+          overflow: visible;
         }
         .slider-modern::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 22px;
-          height: 22px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background: #7A9A6D;
           cursor: pointer;
           border: 3px solid white;
           box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          margin-top: -10px;
         }
         .slider-modern::-webkit-slider-thumb:hover {
           transform: scale(1.1);
@@ -185,8 +194,8 @@ export default function FilterModal({ open, onClose, filters, onApply }: Props) 
           transform: scale(1.05);
         }
         .slider-modern::-moz-range-thumb {
-          width: 22px;
-          height: 22px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background: #7A9A6D;
           cursor: pointer;
