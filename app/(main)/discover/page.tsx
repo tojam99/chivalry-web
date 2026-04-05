@@ -362,6 +362,7 @@ export default function DiscoverPage() {
                 )}
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-white font-bold text-3xl">{currentProfile.name}, {currentProfile.age}</h2>
+                  {currentProfile.verified && <ShieldCheck className="w-6 h-6 text-green-400" />}
                 </div>
                 {(currentProfile.profession || currentProfile.education) && (
                   <p className="text-white/80 text-sm mt-0.5">
@@ -381,9 +382,6 @@ export default function DiscoverPage() {
                     <MapPin className="w-3.5 h-3.5" /><span>{currentProfile.city}</span>
                   </div>
                 )}
-              </div>
-              <div className="flex flex-col items-end gap-1.5 shrink-0 ml-3">
-                {currentProfile.verified && <div className="bg-sage-400 text-white text-xs font-medium px-2.5 py-1 rounded-lg">Verified</div>}
               </div>
             </div>
           </div>
