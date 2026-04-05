@@ -738,10 +738,8 @@ export default function ProfilePage() {
       {/* Upgrade to Premium Modal */}
       {showUpgradeModal && (
         <>
-          {/* Backdrop - desktop only */}
-          <div className="hidden md:block fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setShowUpgradeModal(false)} />
-          {/* Mobile tap-outside */}
-          <div className="md:hidden fixed inset-0 z-50" onClick={() => setShowUpgradeModal(false)} />
+          {/* Tap outside to close */}
+          <div className="fixed inset-0 z-50" onClick={() => setShowUpgradeModal(false)} />
           {/* Modal card */}
           <div className="fixed inset-0 z-[51] flex items-center justify-center px-4 pointer-events-none" style={{ height: '100dvh' }}>
             <div className="bg-cream-50 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-cream-300 pointer-events-auto">
